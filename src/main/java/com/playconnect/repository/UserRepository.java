@@ -1,5 +1,5 @@
-package repository;  
-import Entity.User;  
+package com.playconnect.repository;  
+import com.playconnect.entity.User;  // Import User entity
 import org.springframework.data.jpa.repository.JpaRepository;  // Gives CRUD methods
 import org.springframework.stereotype.Repository;  // Marks as Spring Bean
 import java.util.Optional;  // For handling null safely

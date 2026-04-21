@@ -1,4 +1,4 @@
-package Entity;
+package com.playconnect.entity;
 
 import jakarta.persistence.*;
 
