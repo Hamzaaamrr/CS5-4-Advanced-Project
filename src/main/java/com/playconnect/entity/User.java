@@ -1,4 +1,4 @@
-package com.playconnect.entity;
+package Entity;
 
 import jakarta.persistence.*;
 
@@ -15,7 +15,8 @@ public class User {
     @Column(unique = true)  // Ensures no two users have same email
     private String email;    
     private String password;     
-    private String role;         
+    private String role;
+	private boolean isActive;         
     public User() {}  // Empty constructor (required by JPA) work all frameworks, springboot can create users
     //getters and setters:
     public String getFullName() {
@@ -76,9 +77,18 @@ public class User {
 
 	public void setRole(String role) {
 		this.role = role;
-	}
+	}	
+	
+	public boolean isActive() {
+        return isActive;
+    }
+    
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
 // methods:
 	public boolean isAdmin() {
         return "ADMIN".equals(role);  // Checks if user is admin
     }
+
 }
