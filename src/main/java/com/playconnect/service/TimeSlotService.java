@@ -22,8 +22,7 @@ public class TimeSlotService {
     }
     
     // Check if a specific time slot exists and is available
-    public boolean isSlotAvailable(Long courtId, LocalDate date, 
-                                    LocalTime startTime, LocalTime endTime) {
+    public boolean isSlotAvailable(Long courtId, LocalDate date, LocalTime startTime, LocalTime endTime) {
         Optional<TimeSlot> slot = timeSlotRepo.findByCourtIdAndDateAndStartTimeAndEndTime(
             courtId, date, startTime, endTime);
         
