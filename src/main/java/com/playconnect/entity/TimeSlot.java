@@ -1,5 +1,8 @@
 package com.playconnect.entity;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,9 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "time_slots")
@@ -73,7 +73,10 @@ public class TimeSlot {
     }
 
     public void setEndTime(LocalTime endTime) {
+        if(endTime.isAfter(startTime))
         this.endTime = endTime;
+    else
+        endTime=null;
     }
 
     public boolean isAvailable() {
@@ -83,4 +86,5 @@ public class TimeSlot {
     public void setAvailable(boolean available) {
         this.available = available;
     }
+    
 }
