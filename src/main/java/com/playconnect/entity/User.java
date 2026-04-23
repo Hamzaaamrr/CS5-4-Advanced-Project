@@ -1,6 +1,11 @@
 package com.playconnect.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity  // Makes this class a database table
 @Table(name = "users")  // Names the table "users" in database
@@ -76,6 +81,11 @@ public class User {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+	public boolean valid() {
+		return firstName != null && !firstName.trim().isEmpty()
+			&& lastName != null && !lastName.trim().isEmpty()
+			&& email != null && !email.trim().isEmpty();
 	}
 // methods:
 	public boolean isAdmin() {

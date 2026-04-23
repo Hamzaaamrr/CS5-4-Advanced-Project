@@ -1,13 +1,13 @@
 package com.playconnect.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "courts")
@@ -26,6 +26,7 @@ public class Court {
 
     private String address;
 
+    private int NumofPlayers;
     @Column(nullable = false)
     private BigDecimal pricePerHour;
 
@@ -80,11 +81,23 @@ public class Court {
         this.pricePerHour = pricePerHour;
     }
 
+    public int getNumofPlayers() {
+        return NumofPlayers;
+    }
+
+    public void setNumofPlayers(int numofPlayers) {
+        NumofPlayers = numofPlayers;
+    }
+
     public boolean isActive() {
         return active;
     }
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean CourtValid() {
+        return NumofPlayers >= 1;
     }
 }

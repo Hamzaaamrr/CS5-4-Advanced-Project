@@ -1,5 +1,7 @@
 package com.playconnect.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,8 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "bookings")
@@ -36,9 +36,16 @@ public class Booking {
     @Column(nullable = false)
     private BigDecimal totalPrice;
 
+    @Column(nullable = false)
+    private int playerCount = 1;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BookingStatus bookingStatus = BookingStatus.PENDING; //defaults to pending when created
+    private BookingStatus bookingStatus = BookingStatus.PENDING; // defaults to pending when created
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     public Long getId() {
         return id;
@@ -80,6 +87,14 @@ public class Booking {
         this.totalPrice = totalPrice;
     }
 
+    public int getPlayerCount() {
+        return playerCount;
+    }
+
+    public void setPlayerCount(int playerCount) {
+        this.playerCount = playerCount;
+    }
+
     public BookingStatus getBookingStatus() {
         return bookingStatus;
     }
@@ -88,9 +103,24 @@ public class Booking {
         this.bookingStatus = bookingStatus;
     }
 
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
     public enum BookingStatus {
         COMPLETE,
         PENDING,
+        CONFIRMED,
         CANCELLED
+    }
+
+    public enum PaymentStatus {
+        PENDING,
+        PAID,
+        FAILED
     }
 }
