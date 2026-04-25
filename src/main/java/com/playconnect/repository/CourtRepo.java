@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CourtRepo extends JpaRepository<Court, Long>{
-    List<Court> findByIsActiveTrue();
+    List<Court> findByActiveTrue();
 }
