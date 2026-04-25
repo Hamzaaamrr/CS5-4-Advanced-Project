@@ -78,7 +78,7 @@ public class BookingService {
 
     @Transactional
     public Booking CreateBooking(User u, long id) {
-        if (u == null || !u.valid()) {
+        if (u == null || !u.isActive()) {
             throw new IllegalArgumentException("Invalid user details.");
         }
 
@@ -121,9 +121,9 @@ public class BookingService {
             throw new IllegalStateException("Selected time slot is already booked.");
         }
 
-        if (hasOverlap(slot, persistedCourt)) {
-            throw new IllegalStateException("Requested time range overlaps an unavailable slot.");
-        }
+        // if (hasOverlap(slot, persistedCourt)) {
+        //     throw new IllegalStateException("Requested time range overlaps an unavailable slot.");
+        // }
 
         BigDecimal totalPrice = calculateTotalPrice(slot, persistedCourt);
 
@@ -175,12 +175,12 @@ public class BookingService {
         return TR.save(slot);
     }
 
-    private boolean hasOverlap(TimeSlot slot, Court court) {
-        return TR.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime())
-                .stream()
-                .anyMatch(existing -> !existing.isAvailable());
-    }
+    // private boolean hasOverlap(TimeSlot slot, Court court) {
+    //     return TR.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+    //             court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime())
+    //             .stream()
+    //             .anyMatch(existing -> !existing.isAvailable());
+    // }
 
     private BigDecimal calculateTotalPrice(TimeSlot slot, Court court) {
         long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
