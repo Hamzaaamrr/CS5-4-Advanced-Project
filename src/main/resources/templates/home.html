@@ -1,13 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Home Page | PlayConnect</title>
-	
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Courts</title>
+    <style>
+        body { 
+			font-family: "Trebuchet MS", "Segoe UI", sans-serif; 
+			margin: 0; 
+			background: #f2f6fb; 
+			color: #1f2937;
+		}
+        .container { 
+			max-width: 1100px; 
+			margin: 0 auto; 
+			padding: 24px; 
+		}
+        .topbar { 
+			display: flex; 
+			justify-content: space-between; 
+			align-items: center; 
+			gap: 12px; 
+			flex-wrap: wrap; 
+		}
+        .nav { 
+			display: flex; 
+			align-items: center; 
+			gap: 10px; 
+			flex-wrap: wrap; 
+		}
+        .nav a { 
+			color: #1d4ed8; 
+			text-decoration: none; 
+			font-weight: 700; 
+		}
+        .pill { 
+			background: #dbeafe; 
+			color: #1e3a8a; 
+			padding: 6px 10px; 
+			border-radius: 999px; 
+			font-size: 13px; 
+			font-weight: 700; 
+		}
+        .btn { 
+			width: 100%;
+			border: 0;
+			border-radius: 8px;
+			padding: 11px 14px;
+			font-size: 0.95rem;
+			font-weight: 600;
+			color: #fff;
+			background: var(--primary);
+			cursor: pointer; 
+		}
+        .btn.secondary { 
+			background: #0f766e; 
+		}
+        .btn.logout { 
+			background: rgb(239, 0, 0); 
+			padding: 6px 10px; 
+			border-radius: 999px; 
+			font-size: 13px; 
+			font-weight: 700; 
+		}
+        .success { 
+			margin: 14px 0; 
+			padding: 10px; 
+			background: #dcfce7; 
+			border: 1px solid #86efac; 
+			border-radius: 8px; 
+		}
+        .error { 
+			margin: 14px 0; 
+			padding: 10px; 
+			background: #fee2e2; 
+			border: 1px solid #fca5a5; 
+			border-radius: 8px; 
+		}
+        .cards { 
+			margin-top: 16px; 
+			display: grid; 
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; 
+		}
+        .card { 
+			background: #fff; 
+			border: 1px solid #dbe3ef; 
+			border-radius: 12px; 
+			padding: 14px; 
+		}
+        .meta { 
+			color: #475569; 
+			font-size: 14px; 
+		}
+        .actions { 
+			margin-top: 12px; 
+			display: flex; 
+			justify-content: flex-end; 
+		}
+    </style>
 </head>
 <body>
-	
-		<h1>Welcome <span th:text="${user}">User</span></h1>
+<div class="container">
+	<h1>Welcome <span th:text="${user}">User</span>!</h1>
+    <div class="topbar">
+        <div>
+            <h1>Choose A Court</h1>
+            <div class="meta" th:text="${currentUser != null ? 'Logged in as ' + currentUser.firstName + ' ' + currentUser.lastName : 'Not logged in'}"></div>
+        </div>
+        <div class="nav">
+            <span class="pill" th:text="${'Session bookings: ' + cartCount}"></span>
+            <a th:if="${isAdmin}" class="btn secondary" th:href="@{/courts/new}">+ Add Court</a>
+            <a th:href="@{/bookings}">My Bookings</a>
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button class="btn logout" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="success" th:text="${success}"></div>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <div class="cards">
+        <div class="card" th:each="court : ${courts}">
+            <h3 th:text="${court.name}"></h3>
+            <div class="meta" th:text="${court.sportType + ' | ' + court.city + ', ' + court.state}"></div>
+            <div class="meta" th:text="${'Price/hour: ' + court.pricePerHour}"></div>
+
+            <div class="actions">
+                <a class="btn" th:href="@{'/courts/' + ${court.id} + '/schedule'}">View Schedule And Book</a>
+                <form th:if="${isAdmin}" th:action="@{'/courts/' + ${court.id} + '/delete'}" method="post" style="margin-left:8px;">
+                    <button class="btn logout" type="submit">Delete Court</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
