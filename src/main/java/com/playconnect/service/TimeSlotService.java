@@ -3,6 +3,7 @@ package com.playconnect.service;
 import com.playconnect.entity.Court;
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.repository.TimeSlotRepo;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -32,10 +33,15 @@ public class TimeSlotService {
     }
 
     public boolean hasOverlap(TimeSlot slot, Court court) {
-        return timeSlotRepo.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                        court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime())
-                .stream()
-                .anyMatch(existing -> !existing.isAvailable());
+        List<TimeSlot> overlappingSlots = timeSlotRepo.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+                court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime());
+
+        for (TimeSlot existing : overlappingSlots) {
+            if (!existing.isAvailable()) {
+                return true; // la2ena overlap 3ala booking  
+            }
+        }
+        return false; // No unavailable overlaps found
     }
 
     public TimeSlot findOrCreateSlot(Court court, TimeSlot requestedSlot) {

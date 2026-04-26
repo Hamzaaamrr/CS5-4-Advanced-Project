@@ -2,21 +2,37 @@ package com.playconnect.service;
 
 import com.playconnect.entity.Court;
 import com.playconnect.entity.TimeSlot;
+import com.playconnect.entity.User;
 import com.playconnect.repository.CourtRepo;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class CourtService {
     //Create and Delete Court <--- "Only Admin Can Do These"
-
-    private final CourtRepo courtRepo;
-
-    public CourtService(CourtRepo courtRepo) {
-        this.courtRepo = courtRepo;
+private final CourtRepo courtRepo;
+public CourtService(CourtRepo courtRepo){
+    this.courtRepo = courtRepo;
+}
+    public Optional<List<Court>> getAllCourts() {
+        return Optional.ofNullable(courtRepo.findAll());
+    }
+    public Court addCourt(Court court ,User user) {
+        if(user.isAdmin()){
+            return courtRepo.save(court);
+        }
+        throw new IllegalArgumentException("Only admin can add courts");
+    }
+    public void deleteCourt(Court court , User user){
+        if(user.isAdmin()){
+            courtRepo.delete(court);
+            return;
+        }
+        throw new IllegalArgumentException("Only admin can delete courts");
     }
 
     public Optional<Court> resolveCourt(Court court) {
@@ -34,7 +50,7 @@ public class CourtService {
         return court.getPricePerHour().multiply(BigDecimal.valueOf(hours));
     }
 
-    public Optional<Court> findById(Long id) {
-        return courtRepo.findById(id);
+    public Optional<Court> findCourtById(Long id) {
+        return courtRepo.findById(id);  
     }
 }
