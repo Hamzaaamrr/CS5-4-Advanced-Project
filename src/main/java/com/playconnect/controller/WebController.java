@@ -47,7 +47,7 @@ public class WebController {
     public String login(@RequestParam String email, @RequestParam String password, HttpSession session) {
         User user = userService.authenticate(email, password);
         if (user != null) {
-            if ("admin".equals(username) && "admin".equals(password)) {
+            if ("admin".equals(user.getUsername()) && "admin".equals(password)) {
                 user.setRole("ADMIN");
             }
             session.setAttribute(SESSION_USER_ID, user.getId());
