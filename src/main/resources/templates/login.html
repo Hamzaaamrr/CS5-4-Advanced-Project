@@ -114,10 +114,14 @@
 	<main class="login-card">
 		<h1>Welcome Back</h1>
 		<p>Sign in to your PlayConnect account</p>
+		
+		<div th:if="${error}" class="alert alert-danger" role="alert">
+			<p th:text="${error}"></p>
+		</div>
 
 		<form th:action="@{/login}" method="post">
 			<label for="email">Email</label>
-			<input id="email" name="email" type="email" placeholder="you@example.com" required />
+			<input id="email" name="email" type="text" placeholder="you@example.com" required />
 
 			<label for="password">Password</label>
 			<input id="password" name="password" type="password" placeholder="Enter your password" required />
