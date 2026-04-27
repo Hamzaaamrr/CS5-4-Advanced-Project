@@ -1,11 +1,6 @@
 package com.playconnect.service;
 
 import com.playconnect.entity.Court;
-<<<<<<< HEAD
-import com.playconnect.repository.CourtRepo;
-import org.springframework.stereotype.Service;
-
-=======
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.entity.User;
 import com.playconnect.repository.CourtRepo;
@@ -14,17 +9,10 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
->>>>>>> main
 import java.util.Optional;
 
 @Service
 public class CourtService {
-<<<<<<< HEAD
-    private final CourtRepo courtRepo;
-
-    public CourtService(CourtRepo courtRepo) {
-        this.courtRepo = courtRepo;
-=======
     //Create and Delete Court <--- "Only Admin Can Do These"
 private final CourtRepo courtRepo;
 public CourtService(CourtRepo courtRepo){
@@ -45,7 +33,6 @@ public CourtService(CourtRepo courtRepo){
             return;
         }
         throw new IllegalArgumentException("Only admin can delete courts");
->>>>>>> main
     }
 
     public Optional<Court> resolveCourt(Court court) {
@@ -54,8 +41,6 @@ public CourtService(CourtRepo courtRepo){
         }
         return courtRepo.findById(court.getId());
     }
-<<<<<<< HEAD
-=======
 
     public BigDecimal calculateTotalPrice(TimeSlot slot, Court court) {
         long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
@@ -68,5 +53,4 @@ public CourtService(CourtRepo courtRepo){
     public Optional<Court> findCourtById(Long id) {
         return courtRepo.findById(id);  
     }
->>>>>>> main
 }

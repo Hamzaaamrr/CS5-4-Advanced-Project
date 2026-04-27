@@ -8,11 +8,8 @@ import java.util.Optional;
 
 @Service
 public class UserService {
-<<<<<<< HEAD
-=======
     //Register User, Login Authentication Functions
 
->>>>>>> main
     private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
@@ -20,16 +17,6 @@ public class UserService {
     }
 
     public Optional<User> resolveUser(User user) {
-<<<<<<< HEAD
-        if (user == null) return Optional.empty();
-        if (user.getId() != null) {
-            return userRepository.findById(user.getId());
-        }
-        if (user.getEmail() != null) {
-            return userRepository.findByEmail(user.getEmail());
-        }
-        return Optional.empty();
-=======
         if (user.getId() != null) {
             return userRepository.findById(user.getId());
         }
@@ -42,6 +29,5 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
->>>>>>> main
     }
 }
