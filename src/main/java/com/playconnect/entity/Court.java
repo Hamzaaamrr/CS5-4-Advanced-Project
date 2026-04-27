@@ -19,14 +19,11 @@ public class Court {
 
     @Column(nullable = false)
     private String name;
-
     private String description;
-
     private String sportType;
-
     private String address;
-
     private int NumofPlayers;
+    
     @Column(nullable = false)
     private BigDecimal pricePerHour;
 
