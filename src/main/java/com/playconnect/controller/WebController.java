@@ -7,23 +7,23 @@ import jakarta.servlet.http.HttpSession;
 
 import org.springframework.ui.Model;
 
-import java.security.Principal;
-import java.util.List;
+// import java.security.Principal;
+// import java.util.List;
 
-import org.springframework.dao.DataIntegrityViolationException;
+// import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
+// import org.springframework.web.bind.annotation.ModelAttribute;
+// import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+// import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebController {
 
     private static final String SESSION_USER_ID = "SESSION_USER_ID";
-    private static final String SESSION_CART = "SESSION_CART";
+    // private static final String SESSION_CART = "SESSION_CART";
 
     UserService userService;
     CourtService courtService;
@@ -37,18 +37,28 @@ public class WebController {
         this.bookingService = bookingService;
     }
 
+    @GetMapping("/")
+    public String rootRedirect(HttpSession session) {
+        if (session.getAttribute(SESSION_USER_ID) != null) {
+            return "redirect:/home";
+        }
+        return "redirect:/login";
+        
+    }
+
     @GetMapping("/login")
     public String showLoginPage() {
         return "login"; // Return to login view
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String password, HttpSession session) {
+    public String login(@RequestParam String email, @RequestParam String password, HttpSession session, Model model) {
         User user = userService.authenticate(email, password);
         if (user != null) {
             session.setAttribute(SESSION_USER_ID, user.getId());
             return "redirect:/home";
         }
+        model.addAttribute("error", "Invalid email or password.");
         return "login";
     }
 
@@ -80,9 +90,11 @@ public class WebController {
 
         User currentUser = null;
 
-        if (userId != null) {
-            currentUser = userService.getUserById(userId);
+        if (userId == null) {
+            return "redirect:/login";
         }
+
+        currentUser = userService.getUserById(userId);
 
         model.addAttribute("currentUser", currentUser);
 
@@ -96,5 +108,4 @@ public class WebController {
 
         return "home";
     }
-
 }
