@@ -1,7 +1,6 @@
 package com.playconnect.service;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,10 @@ import com.playconnect.entity.Court;
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.entity.User;
 import com.playconnect.repository.BookingRepo;
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 
 
 @Service
@@ -49,11 +51,19 @@ public class BookingService {
 
     @Transactional
     public void CancelBooking(long id, User user) {
+<<<<<<< HEAD
         Optional<Booking> bookingOpt = bookingRepo.findById(id);
         if (bookingOpt.isEmpty()) {
             return;
         }
         Booking booking = bookingOpt.get();
+=======
+        Optional<Booking> bookingOptional = bookingRepo.findById(id);
+        if (bookingOptional.isEmpty()) {
+            throw new IllegalArgumentException("Booking not found.");
+        }
+        Booking booking = bookingOptional.get();
+>>>>>>> main
 
         if (booking.getBookingStatus() == Booking.BookingStatus.CANCELLED) {
             return;
@@ -69,7 +79,11 @@ public class BookingService {
         TimeSlot timeSlot = booking.getTimeSlot();
         if (timeSlot != null) {
             timeSlot.setAvailable(true);
+<<<<<<< HEAD
             timeSlotService.saveSlot(timeSlot);
+=======
+            timeSlotService.save(timeSlot);
+>>>>>>> main
         }
     }
 
@@ -84,11 +98,19 @@ public class BookingService {
             return Optional.empty();
         }
 
+<<<<<<< HEAD
         Optional<Booking> bookingOpt = bookingRepo.findById(id);
         if (bookingOpt.isEmpty()) {
             return Optional.empty();
         }
         Booking booking = bookingOpt.get();
+=======
+        Optional<Booking> bookingOptional = bookingRepo.findById(id);
+        if (bookingOptional.isEmpty()) {
+            throw new IllegalArgumentException("Booking not found.");
+        }
+        Booking booking = bookingOptional.get();
+>>>>>>> main
 
         if (booking.getBookingStatus() == Booking.BookingStatus.CANCELLED) {
             return Optional.empty();
@@ -97,6 +119,7 @@ public class BookingService {
             return Optional.empty();
         }
 
+<<<<<<< HEAD
         Optional<User> persistedUserOpt = userService.resolveUser(u);
         if (persistedUserOpt.isEmpty()) {
             return Optional.empty();
@@ -112,7 +135,25 @@ public class BookingService {
 
         if (requestedSlot == null) {
             return Optional.empty();
+=======
+        Optional<User> userOptional = userService.resolveUser(u);
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User does not exist.");
         }
+        User persistedUser = userOptional.get();
+
+        Optional<Court> courtOptional = courtService.resolveCourt(booking.getCourt());
+        if (courtOptional.isEmpty()) {
+            throw new IllegalArgumentException("Court does not exist.");
+        }
+        Court persistedCourt = courtOptional.get();
+        
+        Optional<TimeSlot> requestedSlotOptional = Optional.ofNullable(booking.getTimeSlot());
+        if (requestedSlotOptional.isEmpty()) {
+            throw new IllegalArgumentException("Booking time slot is required.");
+>>>>>>> main
+        }
+        TimeSlot requestedSlot = requestedSlotOptional.get();
         if (booking.getPlayerCount() < 1) {
             return Optional.empty();
         }
@@ -125,22 +166,36 @@ public class BookingService {
             return Optional.empty();
         }
         if (!timeSlotService.isWholeHour(start) || !timeSlotService.isWholeHour(end)) {
+<<<<<<< HEAD
             return Optional.empty();
         }
 
         TimeSlot slot = timeSlotService.getOrCreateSlot(requestedSlot, persistedCourt);
+=======
+            throw new IllegalArgumentException("Times must be whole hours.");
+        }
+
+        TimeSlot slot = timeSlotService.findOrCreateSlot(persistedCourt, requestedSlot);
+>>>>>>> main
 
         if (!slot.isAvailable()) {
             return Optional.empty();
         }
 
         if (timeSlotService.hasOverlap(slot, persistedCourt)) {
+<<<<<<< HEAD
             return Optional.empty();
         }
 
         Optional<BigDecimal> totalPriceOpt = calculateTotalPrice(slot, persistedCourt);
         if (totalPriceOpt.isEmpty()) return Optional.empty();
         BigDecimal totalPrice = totalPriceOpt.get();
+=======
+            throw new IllegalStateException("Requested time range overlaps an unavailable slot.");
+        }
+
+        BigDecimal totalPrice = courtService.calculateTotalPrice(slot, persistedCourt);
+>>>>>>> main
 
         booking.setUser(persistedUser);
         booking.setCourt(persistedCourt);
@@ -152,13 +207,19 @@ public class BookingService {
         slot.setAvailable(false);
 
         try {
+<<<<<<< HEAD
             timeSlotService.saveSlot(slot);
             return Optional.of(bookingRepo.save(booking));
+=======
+            timeSlotService.save(slot);
+            return bookingRepo.save(booking);
+>>>>>>> main
         } catch (DataIntegrityViolationException ex) {
             return Optional.empty();
         }
     }
 
+<<<<<<< HEAD
     private Optional<BigDecimal> calculateTotalPrice(TimeSlot slot, Court court) {
         long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
         if (hours <= 0) {
@@ -166,4 +227,6 @@ public class BookingService {
         }
         return Optional.of(court.getPricePerHour().multiply(BigDecimal.valueOf(hours)));
     }
+=======
+>>>>>>> main
 }
