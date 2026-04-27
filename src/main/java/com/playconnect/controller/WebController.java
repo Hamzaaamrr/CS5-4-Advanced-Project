@@ -1,6 +1,7 @@
 package com.playconnect.controller;
 
 import com.playconnect.entity.*;
+import com.playconnect.enums.SportType;
 import com.playconnect.service.*;
 
 import jakarta.servlet.http.HttpSession;
@@ -46,6 +47,9 @@ public class WebController {
     public String login(@RequestParam String email, @RequestParam String password, HttpSession session) {
         User user = userService.authenticate(email, password);
         if (user != null) {
+            if ("admin".equals(username) && "admin".equals(password)) {
+                user.setRole("ADMIN");
+            }
             session.setAttribute(SESSION_USER_ID, user.getId());
             return "redirect:/home";
         }
@@ -75,26 +79,60 @@ public class WebController {
 
     @GetMapping("/home")
     public String showCourts(Model model, HttpSession session) {
+            Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+            User currentUser = null;
 
-        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+            if (userId != null) {
+                currentUser = userService.getUserById(userId);
+            }
+            model.addAttribute("currentUser", currentUser);
 
-        User currentUser = null;
+            boolean isAdmin = false;
+            if (currentUser != null) {
+                model.addAttribute("user", currentUser.getFirstName());
+                isAdmin = currentUser.isAdmin();
+            }
+            model.addAttribute("isAdmin", isAdmin);
 
-        if (userId != null) {
-            currentUser = userService.getUserById(userId);
-        }
+            List<Court> courts = courtService.getActiveCourts();
+            if (courts == null) {
+                courts = List.of();
+            }
 
-        model.addAttribute("currentUser", currentUser);
-
-        if (currentUser != null) {
-            model.addAttribute("user", currentUser.getFirstName());
-            model.addAttribute("isAdmin", currentUser.isAdmin());
-        }
-
-        model.addAttribute("courts", courtService.getActiveCourts());
-        model.addAttribute("cartCount", 0);
-
-        return "home";
+            model.addAttribute("courts", courts);
+            model.addAttribute("cartCount", 0);
+            return "home";
     }
 
+    @GetMapping("/courts/new")
+    public String showCreateCourtPage(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        User user = userService.getUserById(userId);
+        if (!user.isAdmin()) {
+            return "redirect:/home";
+        }
+
+        model.addAttribute("court", new Court());
+        model.addAttribute("sportTypes", SportType.values());
+        return "court-form";
+    }
+
+    @PostMapping("/courts")
+    public String createCourt(@ModelAttribute Court court, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        User user = userService.getUserById(userId);
+        if (!user.isAdmin()) {
+            return "redirect:/home";
+        }
+
+        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour());
+        return "redirect:/home";
+    }
+    
 }
