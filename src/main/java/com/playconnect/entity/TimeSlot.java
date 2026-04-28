@@ -73,10 +73,7 @@ public class TimeSlot {
     }
 
     public void setEndTime(LocalTime endTime) {
-        if(endTime.isAfter(startTime))
         this.endTime = endTime;
-    else
-        endTime=null;
     }
 
     public boolean isAvailable() {

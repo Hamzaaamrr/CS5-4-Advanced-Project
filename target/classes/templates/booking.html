@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book a Court</title>
+</head>
+<body>
+
+    <h1>Book a Court</h1>
+
+    <a href="/home">Back to Home</a>
+
+    <hr>
+
+    <form action="/select-slots" method="get">
+
+        <label>Select Court:</label>
+        <select name="courtId" required>
+            <option value="">-- Choose Court --</option>
+            <option th:each="court : ${courts}"
+                    th:value="${court.id}"
+                    th:text="${court.name}">
+            </option>
+        </select>
+
+        <br><br>
+
+        <label>Select Date:</label>
+        <input type="date" name="date" required>
+
+        <br><br>
+
+        <button type="submit">Show Available Slots</button>
+
+    </form>
+
+</body>
+</html>

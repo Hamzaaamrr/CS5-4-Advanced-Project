@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Slots</title>
+</head>
+<body>
+
+    <h2>Select Time Slot</h2>
+
+    <!-- Court Info -->
+    <h3 th:text="${court.name}">Court Name</h3>
+    <p>Date: <span th:text="${date}"></span></p>
+
+    <hr>
+
+    <!-- Slots list -->
+    <div th:if="${#lists.isEmpty(slots)}">
+        <p>No available slots for this date.</p>
+    </div>
+
+    <div th:each="slot : ${slots}">
+
+        <p>
+            Time:
+            <span th:text="${slot.startTime}"></span>
+            →
+            <span th:text="${slot.endTime}"></span>
+        </p>
+
+        <!-- Booking form -->
+        <form action="/book" method="post">
+
+            <input type="hidden" name="slotId" th:value="${slot.id}" />
+
+            <label>Players:</label>
+            <input type="number" name="players" min="1" required />
+
+            <button type="submit">Book</button>
+
+        </form>
+
+        <hr>
+
+    </div>
+
+    <br>
+    <a href="/courts">Back to Courts</a>
+
+</body>
+</html>

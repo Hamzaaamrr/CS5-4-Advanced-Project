@@ -26,7 +26,7 @@ public class Court {
 
     private String address;
 
-    private int NumofPlayers;
+    private int numofPlayers;
     @Column(nullable = false)
     private BigDecimal pricePerHour;
 
@@ -82,11 +82,11 @@ public class Court {
     }
 
     public int getNumofPlayers() {
-        return NumofPlayers;
+        return numofPlayers;
     }
 
     public void setNumofPlayers(int numofPlayers) {
-        NumofPlayers = numofPlayers;
+        this.numofPlayers = numofPlayers;
     }
 
     public boolean isActive() {
@@ -98,6 +98,6 @@ public class Court {
     }
 
     public boolean CourtValid() {
-        return NumofPlayers >= 1;
+        return numofPlayers >= 1;
     }
 }

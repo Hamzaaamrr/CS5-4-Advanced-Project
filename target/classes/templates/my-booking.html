@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Bookings</title>
+</head>
+<body>
+
+    <h2>My Bookings</h2>
+
+    <!-- If no bookings -->
+    <div th:if="${#lists.isEmpty(bookings)}">
+        <p>No bookings yet.</p>
+    </div>
+
+    <!-- Bookings list -->
+    <div th:each="booking : ${bookings}">
+
+        <h3 th:text="${booking.court.name}">Court Name</h3>
+
+        <p>
+            Date:
+            <span th:text="${booking.timeSlot.date}"></span>
+        </p>
+
+        <p>
+            Time:
+            <span th:text="${booking.timeSlot.startTime}"></span>
+            →
+            <span th:text="${booking.timeSlot.endTime}"></span>
+        </p>
+
+        <p>
+            Players:
+            <span th:text="${booking.playerCount}"></span>
+        </p>
+
+        <p>
+            Price:
+            <span th:text="${booking.totalPrice}"></span>
+        </p>
+
+        <p>
+            Status:
+            <span th:text="${booking.bookingStatus}"></span>
+        </p>
+
+        <!-- Cancel button -->
+        <form action="/cancel" method="post"
+              th:if="${booking.bookingStatus.name() == 'CONFIRMED'}">
+
+            <input type="hidden" name="bookingId" th:value="${booking.id}" />
+
+            <button type="submit">Cancel Booking</button>
+        </form>
+
+        <hr>
+
+    </div>
+
+    <br>
+    <a href="/courts">Book Another Court</a>
+    <br>
+    <a href="/home">Back to Home</a>
+
+</body>
+</html>

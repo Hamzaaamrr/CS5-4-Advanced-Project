@@ -1,13 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Home Page | PlayConnect</title>
-	
+    <title>Home</title>
 </head>
 <body>
-	
-		<h1>Welcome <span th:text="${user}">User</span></h1>
+
+    <h1>Welcome, <span th:text="${user}"></span></h1>
+
+    <a href="/booking">Book a Court</a> |
+    <a href="/my-bookings">My Bookings</a> |
+    <a href="/logout">Logout</a>
+	<a href="/courts">Browse Courts</a>
+
+    <hr>
+
+    <h2>Available Courts</h2>
+
+    <div th:each="court : ${courts}">
+        <h3 th:text="${court.name}"></h3>
+        <p th:text="${court.description}"></p>
+        <p>Price: <span th:text="${court.pricePerHour}"></span></p>
+
+        <a th:href="@{/booking}">Book Now</a>
+
+        <hr>
+    </div>
+
 </body>
 </html>

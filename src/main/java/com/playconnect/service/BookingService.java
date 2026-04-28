@@ -2,13 +2,11 @@ package com.playconnect.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.playconnect.entity.Booking;
 import com.playconnect.entity.Court;
@@ -19,174 +17,186 @@ import com.playconnect.repository.CourtRepo;
 import com.playconnect.repository.TimeSlotRepo;
 import com.playconnect.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 
 @Service
 public class BookingService {
-    // Create And Cancel Bookings Functions
-    private final UserRepository UR;
-    private final TimeSlotRepo TR;
-    private final CourtRepo CR;
-    private final BookingRepo BR;
 
-    public BookingService(CourtRepo CR, TimeSlotRepo TR, UserRepository UR, BookingRepo BR) {
-        this.CR = CR;
-        this.TR = TR;
-        this.UR = UR;
-        this.BR = BR;
+    private final UserRepository userRepo;
+    private final CourtRepo courtRepo;
+    private final TimeSlotRepo timeSlotRepo;
+    private final BookingRepo bookingRepo;
+
+    public BookingService(UserRepository userRepo,CourtRepo courtRepo,TimeSlotRepo timeSlotRepo,BookingRepo bookingRepo) {
+        this.userRepo = userRepo;
+        this.courtRepo = courtRepo;
+        this.timeSlotRepo = timeSlotRepo;
+        this.bookingRepo = bookingRepo;
     }
 
-    public List<Booking> getBookingsForUser() {
-        List<Booking> all = BR.findAll();
-        List<Booking> bookings = new ArrayList<>();
-
-        for (Booking b : all) {
-            if (b.getBookingStatus().equals(Booking.BookingStatus.PENDING)) {
-                bookings.add(b);
-            }
-        }
-
-        return bookings;
-    }
-
+    // =========================
+    // MAIN BOOKING FLOW
+    // =========================  
     @Transactional
-    public void CancelBooking(long id, User user) {
-        Booking booking = BR.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
+    public Booking createBookingFromRequest(User sessionUser,Long courtId,String date,String startTime,String endTime,int players) {
 
-        if (booking.getBookingStatus() == Booking.BookingStatus.CANCELLED) {
-            return;
+        // 1. Validate user
+        User user = userRepo.findById(sessionUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.isActive()) {
+            throw new IllegalStateException("User is not active");
         }
 
-        if (user != null && !isBookingOwnerOrAdmin(booking, user)) {
-            throw new IllegalStateException("You do not have permission to cancel this booking.");
+        // 2. Validate court
+        Court court = courtRepo.findById(courtId)
+                .orElseThrow(() -> new IllegalArgumentException("Court not found"));
+
+        // 3. Parse date/time safely
+        LocalDate bookingDate = LocalDate.parse(date);
+        LocalTime start = LocalTime.parse(startTime);
+        LocalTime end = LocalTime.parse(endTime);
+
+        // 4. Validate players
+        if (players < 1) {
+            throw new IllegalArgumentException("Player count must be at least 1");
         }
 
-        booking.setBookingStatus(Booking.BookingStatus.CANCELLED);
-        BR.save(booking);
-
-        TimeSlot timeSlot = booking.getTimeSlot();
-        if (timeSlot != null) {
-            timeSlot.setAvailable(true);
-            TR.save(timeSlot);
-        }
-    }
-
-    private boolean isBookingOwnerOrAdmin(Booking booking, User user) {
-        return (booking.getUser() != null && booking.getUser().getId() != null
-                && booking.getUser().getId().equals(user.getId())) || user.isAdmin();
-    }
-
-    @Transactional
-    public Booking CreateBooking(User u, long id) {
-        if (u == null || !u.isActive()) {
-            throw new IllegalArgumentException("Invalid user details.");
-        }
-
-        Booking booking = BR.findById(id).orElseThrow(() -> new IllegalArgumentException("Booking not found."));
-
-        if (booking.getBookingStatus() == Booking.BookingStatus.CANCELLED) {
-            throw new IllegalStateException("Cannot confirm a cancelled booking.");
-        }
-        if (booking.getBookingStatus() == Booking.BookingStatus.CONFIRMED) {
-            throw new IllegalStateException("Booking has already been confirmed.");
-        }
-
-        User persistedUser = resolveUser(u);
-        Court persistedCourt = resolveCourt(booking.getCourt());
-        TimeSlot requestedSlot = booking.getTimeSlot();
-
-        if (requestedSlot == null) {
-            throw new IllegalArgumentException("Booking time slot is required.");
-        }
-        if (booking.getPlayerCount() < 1) {
-            throw new IllegalArgumentException("playerCount must be at least 1.");
-        }
-        LocalTime start = requestedSlot.getStartTime();
-        LocalTime end = requestedSlot.getEndTime();
-        if (start == null || end == null) {
-            throw new IllegalArgumentException("Start and end times are required.");
-        }
+        // 5. Validate time logic
         if (!end.isAfter(start)) {
-            throw new IllegalArgumentException("End time must be after start time.");
+            throw new IllegalArgumentException("End time must be after start time");
         }
+
+        // 6. Enforce whole-hour rule
         if (!isWholeHour(start) || !isWholeHour(end)) {
-            throw new IllegalArgumentException("Times must be whole hours.");
+            throw new IllegalArgumentException("Booking must be in full hours only");
         }
 
-        TimeSlot slot = TR.findByCourtIdAndDateAndStartTimeAndEndTime(
-                persistedCourt.getId(), requestedSlot.getDate(), start, end)
-                .orElseGet(() -> createSlot(requestedSlot, persistedCourt));
+        // 7. Find exact time slot
+        TimeSlot slot = timeSlotRepo
+                .findByCourtIdAndDateAndStartTimeAndEndTime(
+                        courtId, bookingDate, start, end)
+                .orElseThrow(() -> new IllegalArgumentException("Time slot not found"));
 
+        // 8. Check availability
         if (!slot.isAvailable()) {
-            throw new IllegalStateException("Selected time slot is already booked.");
+            throw new IllegalStateException("Time slot already booked");
         }
 
-        // if (hasOverlap(slot, persistedCourt)) {
-        //     throw new IllegalStateException("Requested time range overlaps an unavailable slot.");
-        // }
+        // 9. Calculate price
+        BigDecimal totalPrice = calculatePrice(court, start, end);
 
-        BigDecimal totalPrice = calculateTotalPrice(slot, persistedCourt);
-
-        booking.setUser(persistedUser);
-        booking.setCourt(persistedCourt);
+        // 10. Create booking
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setCourt(court);
         booking.setTimeSlot(slot);
+        booking.setPlayerCount(players);
         booking.setTotalPrice(totalPrice);
         booking.setBookingStatus(Booking.BookingStatus.CONFIRMED);
         booking.setPaymentStatus(Booking.PaymentStatus.PENDING);
 
+        // 11. Lock slot
         slot.setAvailable(false);
 
-        try {
-            TR.save(slot);
-            return BR.save(booking);
-        } catch (DataIntegrityViolationException ex) {
-            throw new IllegalStateException("Booking failed because the timeslot was taken. Please try again.", ex);
-        }
+        // 12. Save atomically
+        timeSlotRepo.save(slot);
+        return bookingRepo.save(booking);
     }
 
-    private User resolveUser(User user) {
-        if (user.getId() != null) {
-            return UR.findById(user.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("User does not exist."));
+    @Transactional
+    public Booking createBookingFromSlotId(User sessionUser, Long slotId, int players) {
+
+        // 1. Validate user
+        User user = userRepo.findById(sessionUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.isActive()) {
+            throw new IllegalStateException("User is not active");
         }
-        return UR.findByEmail(user.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User does not exist."));
+
+        // 2. Find time slot
+        TimeSlot slot = timeSlotRepo.findById(slotId)
+                .orElseThrow(() -> new IllegalArgumentException("Time slot not found"));
+
+        // 3. Check availability
+        if (!slot.isAvailable()) {
+            throw new IllegalStateException("Time slot already booked");
+        }
+
+        // 4. Validate players
+        if (players < 1) {
+            throw new IllegalArgumentException("Player count must be at least 1");
+        }
+
+        // 5. Calculate price
+        BigDecimal totalPrice = calculatePrice(slot.getCourt(), slot.getStartTime(), slot.getEndTime());
+
+        // 6. Create booking
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setCourt(slot.getCourt());
+        booking.setTimeSlot(slot);
+        booking.setPlayerCount(players);
+        booking.setTotalPrice(totalPrice);
+        booking.setBookingStatus(Booking.BookingStatus.CONFIRMED);
+        booking.setPaymentStatus(Booking.PaymentStatus.PENDING);
+
+        // 7. Lock slot
+        slot.setAvailable(false);
+
+        // 8. Save atomically
+        timeSlotRepo.save(slot);
+        return bookingRepo.save(booking);
     }
 
-    private Court resolveCourt(Court court) {
-        if (court == null || court.getId() == null) {
-            throw new IllegalArgumentException("Booking court is required.");
+    // =========================
+    // CANCEL BOOKING
+    // =========================
+    @Transactional
+    public void cancelBooking(Long bookingId, User sessionUser) {
+
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        User user = userRepo.findById(sessionUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // ownership or admin check
+        boolean isOwner = booking.getUser().getId().equals(user.getId());
+        boolean isAdmin = "ADMIN".equals(user.getRole());
+
+        if (!isOwner && !isAdmin) {
+            throw new IllegalStateException("Not allowed to cancel this booking");
         }
-        return CR.findById(court.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Court does not exist."));
+
+        booking.setBookingStatus(Booking.BookingStatus.CANCELLED);
+
+        TimeSlot slot = booking.getTimeSlot();
+        if (slot != null) {
+            slot.setAvailable(true);
+            timeSlotRepo.save(slot);
+        }
+
+        bookingRepo.save(booking);
     }
 
+    // =========================
+    // GET USER BOOKINGS
+    // =========================
+    public List<Booking> getBookingsForUser(Long userId) {
+        return bookingRepo.findByUserId(userId);
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
     private boolean isWholeHour(LocalTime time) {
-        return time.getMinute() == 0 && time.getSecond() == 0 && time.getNano() == 0;
+        return time.getMinute() == 0 && time.getSecond() == 0;
     }
 
-    private TimeSlot createSlot(TimeSlot requestedSlot, Court court) {
-        TimeSlot slot = new TimeSlot();
-        slot.setCourt(court);
-        slot.setDate(requestedSlot.getDate());
-        slot.setStartTime(requestedSlot.getStartTime());
-        slot.setEndTime(requestedSlot.getEndTime());
-        slot.setAvailable(true);
-        return TR.save(slot);
-    }
-
-    // private boolean hasOverlap(TimeSlot slot, Court court) {
-    //     return TR.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-    //             court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime())
-    //             .stream()
-    //             .anyMatch(existing -> !existing.isAvailable());
-    // }
-
-    private BigDecimal calculateTotalPrice(TimeSlot slot, Court court) {
-        long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
-        if (hours <= 0) {
-            throw new IllegalArgumentException("Booking duration must be at least one hour.");
-        }
+    private BigDecimal calculatePrice(Court court, LocalTime start, LocalTime end) {
+        long hours = Duration.between(start, end).toHours();
         return court.getPricePerHour().multiply(BigDecimal.valueOf(hours));
     }
 }

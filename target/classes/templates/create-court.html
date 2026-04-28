@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Court</title>
+</head>
+<body>
+
+    <h2>Create New Court (Admin)</h2>
+
+    <form action="/admin/courts" method="post">
+
+        <label>Court Name:</label><br>
+        <input type="text" name="name" required><br><br>
+
+        <label>Description:</label><br>
+        <input type="text" name="description" required><br><br>
+
+        <label>Sport Type:</label><br>
+        <input type="text" name="sportType" required><br><br>
+
+        <label>Address:</label><br>
+        <input type="text" name="address" required><br><br>
+
+        <label>Price Per Hour:</label><br>
+        <input type="number" name="price" step="0.01" required><br><br>
+
+        <button type="submit">Create Court</button>
+
+    </form>
+
+    <br>
+
+    <a href="/home">Back to Home</a>
+
+</body>
+</html>

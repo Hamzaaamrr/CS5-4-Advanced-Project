@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Courts</title>
+</head>
+<body>
+
+    <h2>Available Courts</h2>
+
+    <!-- Loop courts -->
+    <div th:each="court : ${courts}">
+
+        <h3 th:text="${court.name}">Court Name</h3>
+
+        <p th:text="${court.description}">Description</p>
+
+        <p>
+            Price per hour:
+            <span th:text="${court.pricePerHour}"></span>
+        </p>
+
+        <!-- Select date -->
+        <form action="/select-slots" method="get">
+
+            <input type="hidden" name="courtId" th:value="${court.id}" />
+
+            <label>Select Date:</label>
+            <input type="date" name="date" required />
+
+            <button type="submit">View Slots</button>
+
+        </form>
+
+        <hr>
+
+    </div>
+
+    <br>
+    <a href="/home">Back to Home</a>
+
+</body>
+</html>

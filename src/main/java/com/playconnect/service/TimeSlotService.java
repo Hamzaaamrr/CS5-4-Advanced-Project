@@ -1,14 +1,18 @@
 package com.playconnect.service;
 
-import org.springframework.beans.factory.annotation.Autowired;  // @Autowired = Spring automatically connects/injects the dependency
-import org.springframework.stereotype.Service;  // @Service = Marks this class as a Service layer (holds business logic)
+import java.time.LocalDate;  // @Autowired = Spring automatically connects/injects the dependency
+import java.time.LocalTime;  // @Service = Marks this class as a Service layer (holds business logic)
+import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.playconnect.entity.Court;
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.repository.TimeSlotRepo;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;  // Optional = Container that may or may not hold a value (helps avoid null errors)
+
+import jakarta.transaction.Transactional;  // Optional = Container that may or may not hold a value (helps avoid null errors)
 
 @Service  // @Service = This class handles TimeSlot business logic (Spring will detect it automatically)
 public class TimeSlotService {
@@ -36,6 +40,16 @@ public class TimeSlotService {
                 .filter(TimeSlot::isAvailable)
                 .toList();
     }
+
+    // Get distinct available dates for a court
+    public List<LocalDate> getAvailableDates(Long courtId) {
+        List<TimeSlot> availableSlots = timeSlotRepo.findByCourtIdAndAvailableTrue(courtId);
+        return availableSlots.stream()
+                .map(TimeSlot::getDate)
+                .distinct()
+                .sorted()
+                .toList();
+    }
     
     // Mark a time slot as unavailable (when booked)
     public boolean markSlotAsUnavailable(Long slotId) {
@@ -60,4 +74,48 @@ public class TimeSlotService {
         }
         return false;
     }
+
+    @Transactional
+    public void generateSlots(Court court, LocalDate date,LocalTime startHour,LocalTime endHour) {
+
+        LocalTime current = startHour;
+
+        while (current.isBefore(endHour)) {
+
+            LocalTime next = current.plusHours(1);
+
+            Optional<TimeSlot> existing =
+                    timeSlotRepo.findByCourtIdAndDateAndStartTimeAndEndTime(
+                            court.getId(), date, current, next);
+
+            if (existing.isEmpty()) {
+                TimeSlot slot = new TimeSlot();
+                slot.setCourt(court);
+                slot.setDate(date);
+                slot.setStartTime(current);
+                slot.setEndTime(next);
+                slot.setAvailable(true);
+
+                timeSlotRepo.save(slot);
+            }
+
+            current = next;
+        }
+    }
+
+
+
+
+    //****************Every court automatically has slots for the next 30 days
+    @Transactional
+    public void generateSlotsForNextDays(Court court,LocalTime startHour,LocalTime endHour) {
+
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i < 30; i++) {
+            LocalDate date = today.plusDays(i);
+            generateSlots(court, date, startHour, endHour);
+        }
+    }
+
 }
