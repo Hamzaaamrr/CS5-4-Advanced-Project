@@ -93,7 +93,7 @@ public class User {
     }
 // methods:
 	public boolean isAdmin() {
-        return "ADMIN".equals(role);  // Checks if user is admin
+        return "ADMIN".equalsIgnoreCase(role);
     }
 
 }
