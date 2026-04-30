@@ -123,7 +123,7 @@
     <div class="cards">
         <div class="card" th:each="court : ${courts}">
             <h3 th:text="${court.name}"></h3>
-            <div class="meta" th:text="${court.sportType + ' | ' + court.city + ', ' + court.state}"></div>
+            <div class="meta" th:text="${court.sportType + ' | ' + court.description + ', ' + court.address}"></div>
             <div class="meta" th:text="${'Price/hour: ' + court.pricePerHour}"></div>
 
             <div class="actions">
