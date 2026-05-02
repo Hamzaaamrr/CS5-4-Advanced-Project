@@ -5,141 +5,234 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Register | PlayConnect</title>
 	<style>
-		:root {
-			--bg-top: #e8f3ff;
-			--bg-bottom: #f9fcff;
-			--card-bg: #ffffff;
-			--text: #12263a;
-			--muted: #5f7182;
-			--primary: #0f7ae5;
-			--primary-hover: #0b63ba;
-			--border: #d7e3f0;
-		}
+        :root {
+            --bg-color: #0c0c21;
+            --card-bg: #111126;
+            --primary-pink: #ff2d78;
+            --text-main: #e2e0fd;
+            --text-dim: #ab888e;
+            --input-border: #ab888e;
+            --input-bg: #37374e;
+			--on-surface-variant: #e4bdc3;
+        }
 
-		* {
-			box-sizing: border-box;
-		}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-		body {
-			margin: 0;
-			min-height: 100vh;
-			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-			color: var(--text);
-			background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-			display: grid;
-			place-items: center;
-			padding: 20px;
-		}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background: radial-gradient(circle at top right, #1d1d33 0%, #0c0c21 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-		.register-card {
+        /* Decorative Rectangles */
+        .decor {
+            position: absolute;
+            z-index: 0;
+            pointer-events: none;
+            background: white;
+            opacity: 0.03;
+            transform: rotate(-15deg);
+        }
+        .decor-1 {
+            width: 400px;
+            height: 600px;
+            top: -100px;
+            left: -50px;
+        }
+        .decor-2 {
+            width: 500px;
+            height: 700px;
+            bottom: -200px;
+            right: -100px;
+        }
+
+        .register-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        p.subtitle {
+            font-size: 16px;
+            color: var(--on-surface-variant);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .error-message {
+            background-color: rgba(255, 45, 120, 0.1);
+            color: var(--primary-pink);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 45, 120, 0.2);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
 			width: 100%;
-			max-width: 420px;
-			background: var(--card-bg);
-			border: 1px solid var(--border);
-			border-radius: 12px;
-			padding: 28px;
-			box-shadow: 0 12px 28px rgba(18, 38, 58, 0.12);
-		}
+        }
 
-		h1 {
-			margin: 0 0 8px;
-			font-size: 1.55rem;
-		}
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+			min-width: 0;
+        }
 
-		p {
-			margin: 0 0 20px;
-			color: var(--muted);
-			font-size: 0.95rem;
-		}
-
-		label {
+        label {
 			display: block;
-			margin-bottom: 6px;
-			font-size: 0.9rem;
-			font-weight: 600;
-		}
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            color: var(--on-surface-variant);
+        }
 
-		input {
+        input {			
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--on-surface);
+			font-family: inherit;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
 			width: 100%;
-			padding: 11px 12px;
-			margin-bottom: 14px;
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			font-size: 0.95rem;
-			outline: none;
-			transition: border-color 0.2s ease, box-shadow 0.2s ease;
-		}
+            min-width: 0;
+        }
 
-		input:focus {
-			border-color: var(--primary);
-			box-shadow: 0 0 0 3px rgba(15, 122, 229, 0.16);
-		}
+        input:focus {
+            border-color: var(--primary-pink);
+            box-shadow: 0 0 0 2px rgba(255, 45, 120, 0.2);
+        }
 
-		button {
-			width: 100%;
-			border: 0;
-			border-radius: 8px;
-			padding: 11px 14px;
-			font-size: 0.95rem;
-			font-weight: 600;
-			color: #fff;
-			background: var(--primary);
-			cursor: pointer;
-			transition: background-color 0.2s ease;
-			margin-top: 4px;
-		}
+        button[type="submit"] {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            margin-top: 12px;
+        }
 
-		button:hover {
-			background: var(--primary-hover);
-		}
+        button[type="submit"]:hover {
+            opacity: 0.9;
+        }
 
-		.signin-link {
-			margin-top: 14px;
-			text-align: center;
-			font-size: 0.9rem;
-			color: var(--muted);
-		}
+        button[type="submit"]:active {
+            transform: scale(0.98);
+        }
 
-		a {
-			color: var(--primary);
-			text-decoration: none;
-		}
+        .signin-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--on-surface-variant);
+        }
 
-		a:hover {
-			text-decoration: underline;
-		}
-	</style>
+        .signin-link a {
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .signin-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 32px 24px;
+                margin: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
+	<div class="decor decor-1"></div>
+	<div class="decor decor-2"></div>
 	<main class="register-card">
-		<h1>Create Account</h1>
-		<p>Join PlayConnect and start booking courts</p>
+		<h1>Create an account</h1>
+		<p class="subtitle">Join PlayConnect and start courts reservations</p>
 
-        <div th:if="${error}" style="color: red; margin-bottom: 15px;">
-            <p th:text="${error}"></p>
+        <div class="error-message" th:if="${error}">
+            <span th:text="${error}"></span>
         </div>
 
-		<form th:action="@{/register}" method="post">
-			<label for="firstName">First Name</label>
-			<input id="firstName" name="firstName" type="text" placeholder="John" required />
-
-			<label for="lastName">Last Name</label>
-			<input id="lastName" name="lastName" type="text" placeholder="Doe" required />
-
-			<label for="email">Email</label>
-			<input id="email" name="email" type="email" placeholder="you@example.com" required />
-
-            <label for="username">Username</label>
-			<input id="username" name="username" type="text" required />
-
-			<label for="password">Password</label>
-			<input id="password" name="password" type="password" placeholder="Create a password" required minlength="6" />
-
-			<button type="submit">Register</button>
+		<form method="post" th:action="@{/register}">
+			<div class="form-row">
+				<div class="form-group">
+					<label for="firstName">First Name</label>
+					<input class="w-full" id="firstName" name="firstName" placeholder="John" required="" type="text"/>
+				</div>
+				<div class="form-group">
+					<label for="lastName">Last Name</label>
+					<input class="w-full" id="lastName" name="lastName" placeholder="Doe" required="" type="text"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="username">Username</label>
+				<input id="username" name="username" placeholder="johndoe" required="" type="text"/>
+			</div>
+			<div class="form-group">
+				<label for="email">Email Address</label>
+				<input id="email" name="email" placeholder="john@example.com" required="" type="email"/>
+			</div>
+				<div class="form-group">
+				<label for="password">Password</label>
+				<input id="password" name="password" placeholder="••••••••" required="" type="password"/>
+			</div>
+			<button type="submit">Create Account</button>
 		</form>
 
 		<div class="signin-link">
-			Already have an account? <a th:href="@{/login}">Sign in</a>
+			Already have an account? <a th:href="@{/login}">Log in here</a>
 		</div>
 	</main>
 </body>
