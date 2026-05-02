@@ -4,141 +4,267 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Courts</title>
-    <style>
-        body { 
-			font-family: "Trebuchet MS", "Segoe UI", sans-serif; 
-			margin: 0; 
-			background: #f2f6fb; 
-			color: #1f2937;
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+	<style>
+		:root {
+			--primary: #ff2d78;
+			--primary-glow: rgba(255, 45, 120, 0.4);
+			--secondary: #0f766e;
+			--error: #e04141;
+			--bg-dark: #0c0c21;
+			--surface: rgba(29, 29, 51, 0.7);
 		}
-        .container { 
-			max-width: 1100px; 
-			margin: 0 auto; 
-			padding: 24px; 
+
+		body {
+			background: radial-gradient(circle at top right, #1a1a3a, #0c0c21 60%);
+			color: #e2e0fd;
+			font-family: 'Inter', sans-serif;
+			min-height: 100vh;
+			overflow-x: hidden;
+			margin: 0;
+			padding-bottom: 40px;
 		}
-        .topbar { 
-			display: flex; 
-			justify-content: space-between; 
-			align-items: center; 
-			gap: 12px; 
-			flex-wrap: wrap; 
+
+		h1, h2, h3 {
+			font-family: 'Sora', sans-serif;
 		}
-        .nav { 
-			display: flex; 
-			align-items: center; 
-			gap: 10px; 
-			flex-wrap: wrap; 
-		}
-        .nav a { 
-			color: #1d4ed8; 
-			text-decoration: none; 
-			font-weight: 700; 
-		}
-        .pill { 
-			background: #dbeafe; 
-			color: #1e3a8a; 
-			padding: 6px 10px; 
-			border-radius: 999px; 
-			font-size: 13px; 
-			font-weight: 700; 
-		}
-        .btn { 
-			/* width: 100%; */
-			border: 0;
-			border-radius: 8px;
-			padding: 11px 14px;
-			font-size: 0.95rem;
-			font-weight: 600;
-			color: #fff;
+
+		.decor {
+			position: fixed;
+			z-index: -1;
 			background: var(--primary);
-			cursor: pointer; 
+			filter: blur(100px);
+			opacity: 0.1;
+			pointer-events: none;
 		}
-        .btn.secondary { 
-			background: #0f766e; 
-			color: white;
-			padding: 6px 10px; 
-			border-radius: 999px; 
-			font-size: 13px; 
+
+		.decor-1 { width: 400px; height: 400px; top: -100px; right: -100px; }
+		.decor-2 { width: 300px; height: 300px; bottom: -50px; left: -50px; background: #3b82f6; }
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 2rem;
+			position: relative;
+		}
+
+		.topbar {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			background: var(--surface);
+			backdrop-filter: blur(12px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			padding: 1.5rem 2rem;
+			border-radius: 1rem;
+			margin-bottom: 2rem;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		}
+
+		.topbar h1 {
+			font-size: 1.5rem;
 			font-weight: 700;
+			margin: 0;
+			background: linear-gradient(to right, #fff, var(--primary));
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
 		}
-        .btn.logout { 
-			background: rgb(239, 0, 0); 
-			padding: 6px 10px; 
-			border-radius: 999px; 
-			font-size: 13px; 
-			font-weight: 700; 
+
+		.meta {
+			font-size: 0.875rem;
+			opacity: 0.8;
 		}
-        .success { 
-			margin: 14px 0; 
-			padding: 10px; 
-			background: #dcfce7; 
-			border: 1px solid #86efac; 
-			border-radius: 8px; 
+
+		.nav {
+			display: flex;
+			align-items: center;
+			gap: 1.5rem;
 		}
-        .error { 
-			margin: 14px 0; 
-			padding: 10px; 
-			background: #fee2e2; 
-			border: 1px solid #fca5a5; 
-			border-radius: 8px; 
+
+		.pill {
+			background: rgba(255, 255, 255, 0.1);
+			padding: 0.5rem 1rem;
+			border-radius: 9999px;
+			font-size: 0.75rem;
+			font-weight: 600;
+			color: var(--primary);
+			border: 1px solid rgba(255, 45, 120, 0.3);
 		}
-        .cards { 
-			margin-top: 16px; 
-			display: grid; 
-			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; 
+
+		.nav a, .nav button {
+			font-size: 0.875rem;
+			font-weight: 500;
+			transition: all 0.2s;
 		}
-        .card { 
-			background: #fff; 
-			border: 1px solid #dbe3ef; 
-			border-radius: 12px; 
-			padding: 14px; 
+
+		.nav a:hover {
+			color: #00E0B4;
 		}
-        .meta { 
-			color: #475569; 
-			font-size: 14px; 
+
+		.btn-add {
+			color: #2dd4bf;
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
 		}
-        .actions { 
-			margin-top: 12px; 
-			display: flex; 
-			justify-content: flex-end; 
+
+		.btn-add:hover {
+			color: #5eead4 !important;
+		}
+
+		.logout-btn {
+			color: var(--error);
+			padding: 0.5rem 1rem;
+			border-radius: 9999px;
+			font-size: 0.75rem;
+			font-weight: 1000;
+			border: 1px solid rgba(255, 45, 73, 0.3);
+			background: rgba(255, 255, 255, 0.1);
+			cursor: pointer;
+		}
+
+		.logout-btn:hover {
+			text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+		}
+
+		.success, .error {
+			padding: 1rem;
+			border-radius: 0.5rem;
+			margin-bottom: 2rem;
+			font-weight: 500;
+			text-align: center;
+		}
+
+		.success {
+			background: rgba(16, 185, 129, 0.1);
+			border: 1px solid rgba(16, 185, 129, 0.3);
+			color: #34d399;
+		}
+
+		.error {
+			background: rgba(239, 68, 68, 0.1);
+			border: 1px solid rgba(239, 68, 68, 0.3);
+			color: #f87171;
+		}
+
+		.cards {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+			gap: 2rem;
+		}
+
+		.card {
+			background: var(--surface);
+			backdrop-filter: blur(8px);
+			border: 1px solid rgba(255, 255, 255, 0.05);
+			border-radius: 1.25rem;
+			padding: 1.75rem;
+			transition: transform 0.3s, box-shadow 0.3s;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 45, 120, 0.1);
+			border-color: rgba(255, 45, 120, 0.2);
+		}
+
+		.card h2 {
+			font-size: 1.25rem;
+			margin-bottom: 0.5rem;
+			color: #fff;
+		}
+
+		.card p {
+			font-size: 0.875rem;
+			color: #a1a1aa;
+			margin-bottom: 1.25rem;
+		}
+
+		.card-actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top: auto;
+		}
+
+		.btn {
+			background: var(--primary);
+			color: white;
+			padding: 0.625rem 1.25rem;
+			border-radius: 0.5rem;
+			font-weight: 600;
+			font-size: 0.875rem;
+			transition: all 0.2s;
+			box-shadow: 0 4px 12px var(--primary-glow);
+		}
+
+		.btn:hover {
+			background: #ff4d91;
+			box-shadow: 0 6px 16px var(--primary-glow);
+			transform: scale(1.02);
+		}
+
+		.btn-delete {
+			background: transparent;
+			color: var(--error);
+			border: 1px solid rgba(239, 68, 68, 0.2);
+			padding: 0.5rem 0.75rem;
+			font-size: 0.75rem;
+			border-radius: 0.375rem;
+		}
+
+		.btn-delete:hover {
+			background: rgba(239, 68, 68, 0.1);
+			border-color: var(--error);
+		}
+
+		.booking {
+			text-decoration: none;
+			color: #e2e0fd;
 		}
     </style>
 </head>
 <body>
-<div class="container">
-	<h1>Welcome <span th:text="${user}">User</span>!</h1>
-    <div class="topbar">
-        <div>
-            <h1>Choose A Court</h1>
-            <div class="meta" th:text="${currentUser != null ? 'Logged in as ' + currentUser.firstName + ' ' + currentUser.lastName : 'Not logged in'}"></div>
-        </div>
-        <div class="nav">
-            <span class="pill" th:text="${'Session bookings: ' + cartCount}"></span>
-            <a th:if="${isAdmin}" class="btn secondary" th:href="@{/courts/new}">+ Add Court</a>
-            <a th:href="@{/bookings}">My Bookings</a>
-            <form th:action="@{/logout}" method="post" style="margin:0;">
-                <button class="btn logout" type="submit">Logout</button>
-            </form>
-        </div>
-    </div>
+	<div class="decor decor-1"></div>
+	<div class="decor decor-2"></div>
+	<div class="container">
+		<h1 class="text-3xl font-bold mb-8 text-white">PlayConnect Dashboard</h1>
+		<div class="topbar">
+			<h1>Welcome <span th:text="${user}">User</span>!</h1>
+			<!-- <div> -->
+				<!-- <h1>Choose A Court</h1> -->
+				<!-- <div class="meta" th:text="${currentUser != null ? 'Logged in as Admin' : 'Public Access'}">User Status</div> -->
+				<!-- <div class="meta" th:text="${currentUser != null ? 'Logged in as ' + currentUser.firstName + ' ' + currentUser.lastName : 'Not logged in'}"></div> -->
+			<!-- </div> -->
+			<div class="nav">
+				<span class="pill" th:text="${'Session bookings: ' + cartCount}"></span>
+				<a th:if="${isAdmin}" class="btn-add" th:href="@{/courts/new}">+ Add Court</a>
+				<a th:href="@{/bookings}" class="booking">My Bookings</a>
+				<form method="post" style="display:inline" th:action="@{/logout}">
+					<button class="logout-btn" type="submit">Logout</button>
+				</form>
+			</div>
+		</div>
 
-    <div th:if="${success}" class="success" th:text="${success}"></div>
-    <div th:if="${error}" class="error" th:text="${error}"></div>
+		<div th:if="${success}" class="success" th:text="${success}"></div>
+		<div th:if="${error}" class="error" th:text="${error}"></div>
 
-    <div class="cards">
-        <div class="card" th:each="court : ${courts}">
-            <h3 th:text="${court.name}"></h3>
-            <div class="meta" th:text="${court.sportType + ' | ' + court.description + ', ' + court.address}"></div>
-            <div class="meta" th:text="${'Price/hour: ' + court.pricePerHour}"></div>
+		<div class="cards">
+			<div class="card" th:each="court : ${courts}">
+				<h2 th:text="${court.name}">Court Name</h2>
+				<p th:text="${court.sportType + ' • ' + court.location}">Sport Type &amp; Location</p>
+				<p class="font-bold text-white mb-6" th:text="${'Price/hour: ' + court.pricePerHour}">Price/hour: $0.00</p>
 
-            <div class="actions">
-                <a class="btn" th:href="@{'/courts/' + ${court.id} + '/schedule'}">View Schedule And Book</a>
-                <form th:if="${isAdmin}" th:action="@{'/courts/' + ${court.id} + '/delete'}" method="post" style="margin-left:8px;">
-                    <button class="btn logout" type="submit">Delete Court</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+				<div class="card-actions">
+					<a class="btn" th:href="@{'/courts/' + ${court.id} + '/schedule'}">View Schedule And Book</a>
+					<form method="post" style="display:inline" th:action="@{'/courts/' + ${court.id} + '/delete'}" th:if="${isAdmin}">
+						<button class="btn-delete" type="submit">Delete Court</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
