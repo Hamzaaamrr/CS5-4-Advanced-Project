@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Court</title>
     <style>
-        body {
-             font-family: "Segoe UI", Tahoma, sans-serif; 
-             margin: 0; background: #f8fafc; 
-             color: #1f2937; 
-            }
+        body { 
+			font-family: "Trebuchet MS", "Segoe UI", sans-serif; 
+			margin: 0; 
+			background: #f2f6fb; 
+			color: #1f2937;
+		}
         .container { 
             max-width: 780px; 
             margin: 0 auto; 
             padding: 24px; 
         }
-        form { 
+        .form { 
             background: #fff; 
             border: 1px solid #e5e7eb; 
             border-radius: 10px; 
@@ -50,12 +51,14 @@
             gap: 8px; 
         }
         .btn { 
-            border: 0; 
-            background: #0f766e; 
-            color: #fff; 
-            padding: 9px 12px; 
-            border-radius: 8px; 
-            cursor: pointer; 
+            border: 0;
+			border-radius: 8px;
+			padding: 11px 14px;
+			font-size: 0.95rem;
+			font-weight: 600;
+			color: #fff;
+			background: var(--primary);
+			cursor: pointer;
         }
         .link { padding: 9px 12px; 
             text-decoration: none; 
@@ -80,14 +83,21 @@
             color: #1d4ed8; 
             font-weight: 700; 
         }
-        .logout-btn { 
-            border: 0; 
-            border-radius: 8px; 
-            background: #334155; 
-            color: #fff; 
-            padding: 8px 10px; 
-            cursor: pointer; 
-        }
+        .btn.logout { 
+			background: rgb(239, 0, 0); 
+			padding: 6px 10px; 
+			border-radius: 999px; 
+			font-size: 13px; 
+			font-weight: 700; 
+		}
+        .btn.secondary { 
+			background: #0f766e; 
+			color: white;
+			padding: 6px 10px; 
+			border-radius: 999px; 
+			font-size: 13px; 
+			font-weight: 700;
+		}
     </style>
 </head>
 <body>
@@ -95,14 +105,14 @@
     <div class="top">
         <h1>Create Court</h1>
         <div class="nav">
-            <a th:href="@{/home}">Courts</a>
+            <a class="btn secondary" th:href="@{/home}">Courts</a>
             <a th:href="@{/bookings}">My Bookings</a>
             <form th:action="@{/logout}" method="post" style="margin:0;">
-                <button class="logout-btn" type="submit">Logout</button>
+                <button class="btn logout" type="submit">Logout</button>
             </form>
         </div>
     </div>
-    <form th:action="@{/courts}" th:object="${court}" method="post">
+    <form class="form" th:action="@{/courts}" th:object="${court}" method="post">
         <div class="grid">
             <div><label>Name</label><input th:field="*{name}" required></div>
             <div><label>Sport Type</label><select th:field="*{sportType}" required><option th:each="type : ${sportTypes}" th:value="${type}" th:text="${type}"></option></select></div>
