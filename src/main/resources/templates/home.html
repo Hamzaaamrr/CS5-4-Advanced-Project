@@ -254,7 +254,7 @@
 		<div class="cards">
 			<div class="card" th:each="court : ${courts}">
 				<h2 th:text="${court.name}">Court Name</h2>
-				<p th:text="${court.sportType + ' • ' + court.location}">Sport Type &amp; Location</p>
+				<p th:text="${court.sportType + ' • ' + court.address}">Sport Type &amp; Location</p>
 				<p class="font-bold text-white mb-6" th:text="${'Price/hour: ' + court.pricePerHour}">Price/hour: $0.00</p>
 
 				<div class="card-actions">
