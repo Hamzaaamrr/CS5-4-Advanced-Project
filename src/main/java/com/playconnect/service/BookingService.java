@@ -2,6 +2,7 @@ package com.playconnect.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,27 @@ public class BookingService {
         return bookings;
     }
 
+    public List<Booking> getBookingsForUser(Long userId) {
+        User user = UR.findById(userId).orElse(null);
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        List<Booking> all = BR.findAll();
+        List<Booking> userBookings = new ArrayList<>();
+
+        for (Booking b : all) {
+            if (b.getUser() != null && b.getUser().getId() != null && 
+                b.getUser().getId().equals(userId) && 
+                (b.getBookingStatus().equals(Booking.BookingStatus.CONFIRMED) || 
+                 b.getBookingStatus().equals(Booking.BookingStatus.PENDING))) {
+                userBookings.add(b);
+            }
+        }
+
+        return userBookings;
+    }
+
     @Transactional
     public void CancelBooking(long id, User user) {
         Booking booking = BR.findById(id)
@@ -76,74 +98,6 @@ public class BookingService {
                 && booking.getUser().getId().equals(user.getId())) || user.isAdmin();
     }
 
-    @Transactional
-    public Booking CreateBooking(User u, long id) {
-        if (u == null || !u.isActive()) {
-            throw new IllegalArgumentException("Invalid user details.");
-        }
-
-        Booking booking = BR.findById(id).orElseThrow(() -> new IllegalArgumentException("Booking not found."));
-
-        if (booking.getBookingStatus() == Booking.BookingStatus.CANCELLED) {
-            throw new IllegalStateException("Cannot confirm a cancelled booking.");
-        }
-        if (booking.getBookingStatus() == Booking.BookingStatus.CONFIRMED) {
-            throw new IllegalStateException("Booking has already been confirmed.");
-        }
-
-        User persistedUser = resolveUser(u);
-        Court persistedCourt = resolveCourt(booking.getCourt());
-        TimeSlot requestedSlot = booking.getTimeSlot();
-
-        if (requestedSlot == null) {
-            throw new IllegalArgumentException("Booking time slot is required.");
-        }
-        if (booking.getPlayerCount() < 1) {
-            throw new IllegalArgumentException("playerCount must be at least 1.");
-        }
-        LocalTime start = requestedSlot.getStartTime();
-        LocalTime end = requestedSlot.getEndTime();
-        if (start == null || end == null) {
-            throw new IllegalArgumentException("Start and end times are required.");
-        }
-        if (!end.isAfter(start)) {
-            throw new IllegalArgumentException("End time must be after start time.");
-        }
-        if (!isWholeHour(start) || !isWholeHour(end)) {
-            throw new IllegalArgumentException("Times must be whole hours.");
-        }
-
-        TimeSlot slot = TR.findByCourtIdAndDateAndStartTimeAndEndTime(
-                persistedCourt.getId(), requestedSlot.getDate(), start, end)
-                .orElseGet(() -> createSlot(requestedSlot, persistedCourt));
-
-        if (!slot.isAvailable()) {
-            throw new IllegalStateException("Selected time slot is already booked.");
-        }
-
-        // if (hasOverlap(slot, persistedCourt)) {
-        //     throw new IllegalStateException("Requested time range overlaps an unavailable slot.");
-        // }
-
-        BigDecimal totalPrice = calculateTotalPrice(slot, persistedCourt);
-
-        booking.setUser(persistedUser);
-        booking.setCourt(persistedCourt);
-        booking.setTimeSlot(slot);
-        booking.setTotalPrice(totalPrice);
-        booking.setBookingStatus(Booking.BookingStatus.CONFIRMED);
-        booking.setPaymentStatus(Booking.PaymentStatus.PENDING);
-
-        slot.setAvailable(false);
-
-        try {
-            TR.save(slot);
-            return BR.save(booking);
-        } catch (DataIntegrityViolationException ex) {
-            throw new IllegalStateException("Booking failed because the timeslot was taken. Please try again.", ex);
-        }
-    }
-
     private User resolveUser(User user) {
         if (user.getId() != null) {
             return UR.findById(user.getId())
@@ -165,15 +119,64 @@ public class BookingService {
         return time.getMinute() == 0 && time.getSecond() == 0 && time.getNano() == 0;
     }
 
-    private TimeSlot createSlot(TimeSlot requestedSlot, Court court) {
+    //REMADE CREATE BOOKING FUNCTION
+    @Transactional
+    public Booking createBooking(User user, Court court, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        if (user == null || !user.isActive()) {
+            throw new IllegalArgumentException("Invalid user details.");
+        }
+
+        User persistedUser = resolveUser(user);
+        Court persistedCourt = resolveCourt(court);
+
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Start and end times are required.");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("End time must be after start time.");
+        }
+        if (!isWholeHour(startTime) || !isWholeHour(endTime)) {
+            throw new IllegalArgumentException("Times must be whole hours.");
+        }
+
+        TimeSlot slot = TR.findByCourtIdAndDateAndStartTimeAndEndTime(
+                persistedCourt.getId(), date, startTime, endTime)
+                .orElseGet(() -> createSlot(new TimeSlot(), persistedCourt, date, startTime, endTime));
+
+        if (!slot.isAvailable()) {
+            throw new IllegalStateException("Selected time slot is already booked.");
+        }
+
+        BigDecimal totalPrice = calculateTotalPrice(slot, persistedCourt);
+
+        Booking booking = new Booking();
+        booking.setUser(persistedUser);
+        booking.setCourt(persistedCourt);
+        booking.setTimeSlot(slot);
+        booking.setTotalPrice(totalPrice);
+        booking.setPlayerCount(1);
+        booking.setBookingStatus(Booking.BookingStatus.CONFIRMED);
+
+        slot.setAvailable(false);
+
+        try {
+            TR.save(slot);
+            return BR.save(booking);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalStateException("Booking failed because the timeslot was taken. Please try again.", ex);
+        }
+    }
+
+    private TimeSlot createSlot(TimeSlot requestedSlot, Court court, LocalDate date, LocalTime startTime, LocalTime endTime) {
         TimeSlot slot = new TimeSlot();
         slot.setCourt(court);
-        slot.setDate(requestedSlot.getDate());
-        slot.setStartTime(requestedSlot.getStartTime());
-        slot.setEndTime(requestedSlot.getEndTime());
+        slot.setDate(date);
+        slot.setStartTime(startTime);
+        slot.setEndTime(endTime);
         slot.setAvailable(true);
         return TR.save(slot);
     }
+
 
     // private boolean hasOverlap(TimeSlot slot, Court court) {
     //     return TR.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
@@ -189,4 +192,6 @@ public class BookingService {
         }
         return court.getPricePerHour().multiply(BigDecimal.valueOf(hours));
     }
+
+    
 }

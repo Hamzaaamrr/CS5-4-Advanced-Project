@@ -1,18 +1,33 @@
 package com.playconnect.controller;
 
 import com.playconnect.entity.*;
+import com.playconnect.enums.SportType;
 import com.playconnect.service.*;
+
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.ui.Model;
 
-// import com.playconnect.repository.*;
+// import java.security.Principal;
+import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+// import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+// import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebController {
+
+    private static final String SESSION_USER_ID = "SESSION_USER_ID";
+    // private static final String SESSION_CART = "SESSION_CART";
+
     UserService userService;
     CourtService courtService;
     TimeSlotService timeSlotService;
@@ -25,41 +40,221 @@ public class WebController {
         this.bookingService = bookingService;
     }
 
+    @GetMapping("/")
+    public String rootRedirect(HttpSession session) {
+        if (session.getAttribute(SESSION_USER_ID) != null) {
+            return "redirect:/home";
+        }
+        return "redirect:/login";
+        
+    }
+
     @GetMapping("/login")
-    public String showLoginPage() {
+    public String showLoginPage(HttpSession session) {
+        if(session.getAttribute(SESSION_USER_ID) != null){
+            return "redirect:/home";
+        }
         return "login"; // Return to login view
     }
 
-
     @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String password, Model model) {
+    public String login(@RequestParam String email, @RequestParam String password, HttpSession session, Model model) {
         User user = userService.authenticate(email, password);
-        if(user != null){
-            model.addAttribute("user", user.getFirstName());
-            return "home"; // Redirect to home page on successful login
+
+        if (user != null) {
+            session.setAttribute(SESSION_USER_ID, user.getId());
+            return "redirect:/home";
         }
-        return "login"; // Return to login page on failed login
+
+        model.addAttribute("error", "Invalid email or password.");
+        return "login";
     }
 
     @PostMapping("/register")
     public String register(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String username, @RequestParam String email, @RequestParam String password, Model model) {
         boolean success = userService.registerPlayer(firstName, lastName, username, email, password);
-        if(success){
-            return "redirect:/login"; // Redirect to login page on successful registration
+
+        if (!success) {
+            model.addAttribute("error", "Username or email already exists");
+            return "register";
         }
-        model.addAttribute("error", "Username or email already exists.");
-        return "register"; // Return to registration page on failed registration
+
+        return "redirect:/login";
     }
 
-    @GetMapping("/home")
-    public String showHomePage(Model model) {
-        model.addAttribute("user", "John Doe"); // Example user name
-        return "home";
-    }
-    
     @GetMapping("/register")
     public String showRegisterPage() {
         return "register"; // Return the name of the registration view 
     }
 
+    @PostMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
+
+    @GetMapping("/home")
+    public String showCourts(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        User currentUser = null;
+
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        currentUser = userService.getUserById(userId);
+
+        model.addAttribute("currentUser", currentUser);
+
+            boolean isAdmin = false;
+            if (currentUser != null) {
+                model.addAttribute("user", currentUser.getFirstName());
+                isAdmin = currentUser.isAdmin();
+            }
+            model.addAttribute("isAdmin", isAdmin);
+
+            List<Court> courts = courtService.getActiveCourts();
+            if (courts == null) {
+                courts = List.of(); //0 element list if no courts found
+            }
+
+            model.addAttribute("courts", courts);
+            return "home";
+    }
+
+    @GetMapping("/courts/new")
+    public String showCreateCourtPage(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        User user = userService.getUserById(userId);
+        if (!user.isAdmin()) {
+            return "redirect:/home";
+        }
+
+        model.addAttribute("court", new Court());
+        model.addAttribute("sportTypes", SportType.values());
+        return "court-form";
+    }
+
+    @PostMapping("/courts")
+    public String createCourt(@ModelAttribute Court court, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        User user = userService.getUserById(userId);
+        if (!user.isAdmin()) {
+            return "redirect:/home";
+        }
+
+        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour());
+        return "redirect:/home";
+    }
+
+    @PostMapping("/courts/{courtId}/delete")
+    public String removeCourt(@PathVariable Long courtId, HttpSession session, Model model){
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        User user = userService.getUserById(userId);
+
+        if(userId == null){
+            return "redirect:/login";
+        }
+        if (!user.isAdmin()) {
+            model.addAttribute("error", "You do not have permission to delete this court.");
+            return "redirect:/home";
+        }
+
+        try {
+            courtService.hardDeleteCourt(courtId);
+            model.addAttribute("success", "Court deleted successfully.");
+            return "redirect:/home";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error deleting court: " + e.getMessage());
+            return "redirect:/home";
+        }
+    }
+
+    @GetMapping("/courts/{courtId}/schedule") //schedule page for a specific court
+    public String showSchedule(@PathVariable Long courtId, Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        User currentUser = userService.getUserById(userId);
+        Court court = courtService.getCourtById(courtId);
+        
+        if (court == null) {
+            return "redirect:/home";
+        }
+
+        model.addAttribute("court", court);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("courtId", courtId);
+        
+        return "schedules";
+    }
+
+    @PostMapping("/book")
+    public String createBooking(@RequestParam Long courtId, @RequestParam String bookingDate, @RequestParam String startTime, @RequestParam String endTime, HttpSession session, Model model) {
+           
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            User currentUser = userService.getUserById(userId);
+            Court court = courtService.getCourtById(courtId);
+
+            if (court == null) {
+                model.addAttribute("error", "Court not found.");
+                return "redirect:/home";
+            }
+
+            // Parse the date and times
+            LocalDate date = LocalDate.parse(bookingDate);
+            LocalTime start = LocalTime.parse(startTime);
+            LocalTime end = LocalTime.parse(endTime);
+
+            // Create the booking using the service
+            bookingService.createBooking(currentUser, court, date, start, end);
+
+            return "redirect:/bookings";
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Error creating booking: " + e.getMessage());
+            return "redirect:/courts/" + courtId + "/schedule";
+        }
+    }
+
+    @GetMapping("/bookings")
+    public String showMyBookings(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("bookings",bookingService.getBookingsForUser(userId));
+
+        return "my-bookings";
+    }
+
+    @PostMapping("/cancel")
+    public String handleCancelBooking(@RequestParam Long bookingId,HttpSession session) {
+
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        User user = userService.getUserById(userId);
+
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        bookingService.CancelBooking(bookingId, user);
+
+        return "redirect:/bookings";
+    }
 }

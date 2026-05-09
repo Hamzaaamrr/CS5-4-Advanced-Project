@@ -56,4 +56,11 @@ public class UserService {
         userRepository.save(user); // Save to DB
         return true;  // Registration successful
     }
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+    public User findByUsername(String name) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByUsername'");
+    }
 }
