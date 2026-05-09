@@ -1,4 +1,4 @@
-package com.playconnect.service;
+package Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -11,14 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.playconnect.entity.Booking;
-import com.playconnect.entity.Court;
-import com.playconnect.entity.TimeSlot;
-import com.playconnect.entity.User;
-import com.playconnect.repository.BookingRepo;
-import com.playconnect.repository.CourtRepo;
-import com.playconnect.repository.TimeSlotRepo;
-import com.playconnect.repository.UserRepository;
+import Entity.*;
+import repository.*;
 
 
 @Service
@@ -34,6 +28,10 @@ public class BookingService {
         this.TR = TR;
         this.UR = UR;
         this.BR = BR;
+    }
+    // getAllBookings: (admin method)
+    public List<Booking> getAllBookings() {
+        return BR.findAll();  // Returns every booking in the database
     }
 
     public List<Booking> getBookingsForUser() {
