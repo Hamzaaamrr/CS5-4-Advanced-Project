@@ -5,6 +5,7 @@ import com.playconnect.entity.Booking;
 import java.util.List;
 import java.util.Optional;
 
+import com.playconnect.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,6 @@ import org.springframework.stereotype.Repository;
 public interface BookingRepo extends JpaRepository<Booking, Long>{
     List<Booking> findByUserId(Long userId);
     Optional<Booking> findByIdAndUserId(Long id, Long userId);
+
+    long getIdByUser(User u);
 }

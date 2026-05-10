@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedules - PlayConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary":               "#ffb1c7",
+                        "primary-container":     "#ff4993",
+                        "on-primary-container":  "#59002b",
+                        "secondary":             "#e6feff",
+                        "secondary-container":   "#00f4fe",
+                        "tertiary":              "#c6c4df",
+                        "error":                 "#ffb4ab",
+                        "surface":               "#13131b",
+                        "background":            "#13131b",
+                        "on-background":         "#e4e1ed",
+                        "surface-container":     "#1f1f27",
+                        "surface-container-low": "#1b1b23"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ── Base ───────────────────────────────────────────── */
+        .icon { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        body {
+            background: #13131b;
+            color: #e4e1ed;
+            font-family: 'Lexend', sans-serif;
+            padding-bottom: 6rem;
+        }
+
+        /* ── Header ─────────────────────────────────────────── */
+        .site-header {
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 1.5rem; height: 4rem;
+            background: rgba(10, 10, 18, 0.8);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em; color: #FF2E8C; }
+
+        .site-nav { display: none; gap: 2rem; }
+        @media (min-width: 768px) { .site-nav { display: flex; align-items: center; } }
+        .nav-link       { color: #94a3b8; font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+        .nav-link:hover { color: #FF2E8C; }
+        .nav-link-active { color: #FF2E8C; border-bottom: 2px solid #FF2E8C; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+
+        /* "+Add Court" pill button */
+        .btn-add-court {
+            display: flex; align-items: center; gap: 0.375rem;
+            padding: 0.4rem 1rem; border-radius: 9999px; border: none; cursor: pointer;
+            background: #FF2E8C; color: #fff;
+            font-size: 0.8rem; font-weight: 700; font-family: 'Lexend', sans-serif;
+            box-shadow: 0 0 16px rgba(255,46,140,0.4);
+            text-decoration: none; transition: opacity 0.2s;
+        }
+        .btn-add-court:hover { opacity: 0.85; }
+
+        /* logout */
+        .btn-logout {
+            padding: 0.4rem 1rem; border-radius: 9999px; cursor: pointer;
+            background: transparent; border: 1px solid rgba(255,100,100,0.3);
+            color: #ffb4ab; font-size: 0.75rem; font-weight: 700;
+            font-family: 'Lexend', sans-serif; transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,100,100,0.1); }
+
+        /* ── Layout ─────────────────────────────────────────── */
+        .main { padding-top: 6rem; padding-left: 1.5rem; padding-right: 1.5rem; max-width: 80rem; margin: 0 auto; }
+
+        .glass-card {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* ── Court header section ────────────────────────────── */
+        .court-header { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        @media (min-width: 1024px) { .court-header { grid-template-columns: 2fr 1fr; } }
+
+        /* Court image */
+        .court-image {
+            position: relative; border-radius: 1rem; overflow: hidden;
+            height: 20rem; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(255,46,140,0.2), rgba(0,244,254,0.2));
+        }
+        .court-image-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, #0A0A12, transparent, transparent);
+        }
+        .court-image-body { position: absolute; bottom: 1.5rem; left: 1.5rem; }
+
+        .court-type-badge {
+            font-size: 0.75rem; font-weight: 600;
+            background: #00f4fe; color: #e4e1ed;
+            padding: 0.25rem 0.75rem; border-radius: 9999px;
+            margin-bottom: 0.75rem; display: inline-block;
+        }
+        .court-name     { font-size: 1.875rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+        .court-location { display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1; font-size: 0.875rem; }
+        .loc-icon       { font-size: 1rem !important; }
+
+        /* Court details card */
+        .details-card { padding: 1.5rem; border-radius: 1rem; height: fit-content; }
+        .details-title { font-size: 1.125rem; font-weight: 700; color: #fff; margin-bottom: 1rem; }
+
+        .detail-list  { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; }
+        .detail-item  { display: flex; align-items: flex-start; gap: 0.75rem; }
+        .detail-icon  { color: #ffb1c7; margin-top: 0.25rem; }
+        .detail-label { font-size: 0.875rem; font-weight: 600; color: #fff; }
+        .detail-sub   { font-size: 0.75rem; color: #64748b; }
+
+        .detail-footer {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 1rem; padding-top: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .detail-footer-label { color: #94a3b8; font-size: 0.875rem; }
+        .detail-footer-value { font-weight: 700; color: #fff; }
+
+        /* ── Booking section ─────────────────────────────────── */
+        .booking-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 1024px) { .booking-layout { grid-template-columns: 2fr 1fr; } }
+
+        .booking-left { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* Calendar card */
+        .cal-card { padding: 1.5rem; border-radius: 1rem; }
+        .cal-header { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        @media (min-width: 768px) { .cal-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+        .cal-title { font-size: 1.125rem; font-weight: 700; color: #fff; }
+
+        /* Week date row */
+        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 2rem; }
+        .day-col   { text-align: center; }
+        .day-label { font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 0.5rem; }
+
+        .date-btn {
+            width: 2.5rem; height: 2.5rem; border-radius: 9999px; border: none;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 0.875rem;
+            margin: 0 auto; cursor: pointer; background: transparent; transition: background 0.2s;
+        }
+        .date-btn:hover  { background: rgba(255,255,255,0.1); }
+        .date-btn.weekend { color: #ffb1c7; }
+        .date-btn.selected,
+        .date-btn.selected.weekend {
+            background: #ffb1c7 !important;
+            color: #59002b !important;
+            box-shadow: 0 0 15px rgba(255,177,199,0.4);
+        }
+
+        /* Time selectors */
+        .time-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 768px) { .time-grid { grid-template-columns: 1fr 1fr; } }
+
+        .field-label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block; }
+
+        .time-select {
+            width: 100%; background: #1b1b23; border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; border-radius: 0.5rem; padding: 0.75rem 1rem;
+            font-size: 0.875rem; font-family: 'Lexend', sans-serif;
+        }
+        .time-select:focus { outline: none; box-shadow: 0 0 0 2px #ffb1c7; }
+
+        /* Submit button */
+        .btn-submit {
+            width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: none;
+            background: #ff4993; color: #59002b;
+            font-weight: 700; font-size: 0.875rem; cursor: pointer;
+            box-shadow: 0 0 20px rgba(255,46,140,0.3);
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        .btn-submit:hover { opacity: 0.9; }
+
+        /* ── Booking summary sidebar ─────────────────────────── */
+        .summary-card { padding: 1.5rem; border-radius: 1rem; position: sticky; top: 6rem; }
+        .summary-title { font-size: 1.125rem; font-weight: 700; color: #fff; margin-bottom: 1.5rem; }
+
+        .summary-court { display: flex; justify-content: space-between; align-items: flex-start; }
+        .summary-court-name { font-size: 0.875rem; font-weight: 600; color: #fff; }
+        .summary-court-type { font-size: 0.75rem; color: #64748b; }
+        .summary-court-icon { color: #ffb1c7; font-size: 1.125rem !important; }
+
+        .summary-box {
+            background: #1f1f27; border-radius: 0.5rem; padding: 1rem;
+            margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .summary-hint  { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .summary-row   { display: flex; justify-content: space-between; font-size: 0.875rem; color: #fff; }
+        .summary-value { font-weight: 700; }
+
+        .summary-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .summary-duration { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; }
+        .summary-total {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 1rem; font-weight: 700; color: #fff;
+            padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .summary-total-price { color: #ffb1c7; box-shadow: 0 0 20px rgba(255,46,140,0.3); }
+
+        /* Info notice */
+        .info-notice {
+            padding: 1rem; background: rgba(59,130,246,0.1); border-radius: 0.5rem;
+            border: 1px solid rgba(59,130,246,0.2);
+            font-size: 0.75rem; color: #bfdbfe;
+        }
+        .info-icon { font-size: 0.75rem !important; vertical-align: middle; margin-right: 0.25rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <span class="logo">PlayConnect</span>
+        <nav class="site-nav">
+            <a th:href="@{/}" class="nav-link">Dashboard</a>
+            <a th:href="@{/bookings}" class="nav-link">My Bookings</a>
+            
+        </nav>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <form method="post" th:action="@{/logout}" style="display:inline;">
+                <button class="btn-logout" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+
+        <!-- Court Header -->
+        <section class="court-header">
+
+            <!-- Court Image & Info -->
+            <div>
+                <div class="court-image">
+                    <div class="court-image-overlay"></div>
+                    <div class="court-image-body">
+                        <span class="court-type-badge" th:text="${court.sportType}">Court Type</span>
+                        <h1 class="court-name" th:text="${court.name}">Court Name</h1>
+                        <div class="court-location">
+                            <span class="material-symbols-outlined loc-icon icon">location_on</span>
+                            <span th:text="${court.address}">Location</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facility Details -->
+            <div class="glass-card details-card">
+                <h2 class="details-title">Court Details</h2>
+                <ul class="detail-list">
+                    <li class="detail-item">
+                        <span class="material-symbols-outlined detail-icon icon">info</span>
+                        <div>
+                            <p class="detail-label" th:text="${court.sportType}">Sport Type</p>
+                            <p class="detail-sub">Professional Grade</p>
+                        </div>
+                    </li>
+                    <li class="detail-item">
+                        <span class="material-symbols-outlined detail-icon icon">price_check</span>
+                        <div>
+                            <p class="detail-label" th:text="${'$' + court.pricePerHour}">Price</p>
+                            <p class="detail-sub">Per Hour</p>
+                        </div>
+                    </li>
+                    <li class="detail-item">
+                        <span class="material-symbols-outlined detail-icon icon">groups</span>
+                        <div>
+                            <p class="detail-label" th:text="${court.numofPlayers + ' Players'}">Players</p>
+                            <p class="detail-sub">Capacity</p>
+                        </div>
+                    </li>
+                </ul>
+                <div class="detail-footer">
+                    <span class="detail-footer-label">Court ID</span>
+                    <span class="detail-footer-value" th:text="${'#' + court.id}">ID</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Booking Section -->
+        <div class="booking-layout">
+
+            <!-- Calendar & Time Slots -->
+            <div class="booking-left">
+
+                <div class="glass-card cal-card">
+                    <div class="cal-header">
+                        <h3 class="cal-title">Select Schedule</h3>
+                    </div>
+
+                    <!-- Week Days -->
+                    <div class="week-grid">
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn" data-date="0">24</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn" data-date="1">25</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn" data-date="2">26</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn" data-date="3">27</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn" data-date="4">28</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn weekend" data-date="5">29</button>
+                        </div>
+                        <div class="day-col">
+                            <p class="day-label date-label">---</p>
+                            <button type="button" class="date-btn weekend" data-date="6">30</button>
+                        </div>
+                    </div>
+
+                    <!-- Booking Form -->
+                    <form th:action="@{/book}" method="POST" id="bookingForm" style="display:flex;flex-direction:column;gap:1.5rem;">
+                        <input type="hidden" name="courtId"     th:value="${courtId}">
+                        <input type="hidden" name="bookingDate" id="bookingDate" required>
+
+                        <div class="time-grid">
+                            <div>
+                                <label class="field-label">From</label>
+                                <select name="startTime" required class="time-select">
+                                    <option value="">Select start time</option>
+                                    <option value="08:00">08:00 AM</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">01:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                    <option value="18:00">06:00 PM</option>
+                                    <option value="19:00">07:00 PM</option>
+                                    <option value="20:00">08:00 PM</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label">To</label>
+                                <select name="endTime" required class="time-select">
+                                    <option value="">Select end time</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">01:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                    <option value="18:00">06:00 PM</option>
+                                    <option value="19:00">07:00 PM</option>
+                                    <option value="20:00">08:00 PM</option>
+                                    <option value="21:00">09:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            Proceed to Summary
+                            <span class="material-symbols-outlined icon">arrow_forward</span>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Booking Summary Sidebar -->
+            <div>
+                <div class="glass-card summary-card">
+                    <h3 class="summary-title">Booking Summary</h3>
+
+                    <div class="summary-court">
+                        <div>
+                            <p class="summary-court-name" th:text="${court.name}">Court Name</p>
+                            <p class="summary-court-type" th:text="${court.sportType}">Court Type</p>
+                        </div>
+                        <span class="material-symbols-outlined summary-court-icon icon">event_available</span>
+                    </div>
+
+                    <div class="summary-box">
+                        <p class="summary-hint">Selected Times will appear here</p>
+                        <div class="summary-row">
+                            <span>Rate</span>
+                            <span class="summary-value" th:text="${'$' + court.pricePerHour + '/hr'}">Price</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-footer">
+                        <div class="summary-duration">
+                            <span>Duration</span>
+                            <span>-- hours</span>
+                        </div>
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span class="summary-total-price">--</span>
+                        </div>
+                    </div>
+
+                    <div class="info-notice" style="margin-top:1rem;">
+                        <span class="material-symbols-outlined info-icon icon">info</span>
+                        Select a date and time range above to see total price and confirm booking.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date();
+            const pad   = n => String(n).padStart(2, '0');
+            const fmt   = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const todayStr = fmt(today);
+            const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+            document.getElementById('bookingDate').value = todayStr;
+
+            const buttons = document.querySelectorAll('.date-btn');
+            const labels  = document.querySelectorAll('.date-label');
+
+            buttons.forEach((btn, i) => {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const dateStr = fmt(d);
+
+                if (labels[i]) labels[i].textContent = weekdays[d.getDay()];
+                btn.textContent = pad(d.getDate());
+                btn.setAttribute('data-date-value', dateStr);
+
+                if (dateStr === todayStr) btn.classList.add('selected');
+
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    buttons.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    document.getElementById('bookingDate').value = dateStr;
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,56 +1,78 @@
 package com.playconnect.service;
 
-import com.playconnect.entity.Court;
-import com.playconnect.entity.TimeSlot;
-import com.playconnect.entity.User;
+import com.playconnect.entity.Court; 
 import com.playconnect.repository.CourtRepo;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;  
+import org.springframework.stereotype.Service; 
+import java.math.BigDecimal;  
+import java.util.List; 
+import java.util.Optional;  
 
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
-
-@Service
+@Service  // Service class
 public class CourtService {
-    //Create and Delete Court <--- "Only Admin Can Do These"
-private final CourtRepo courtRepo;
-public CourtService(CourtRepo courtRepo){
-    this.courtRepo = courtRepo;
-}
-    public Optional<List<Court>> getAllCourts() {
-        return Optional.ofNullable(courtRepo.findAll());
+    
+    @Autowired  // Spring injects CourtRepo here
+    private CourtRepo courtRepo;  // Repository for DB operations
+    
+    // Get all active courts (isActive = true)
+    public List<Court> getActiveCourts() {
+        return courtRepo.findByActiveTrue();  // Query: SELECT * FROM courts WHERE active = true
     }
-    public Court addCourt(Court court ,User user) {
-        if(user.isAdmin()){
-            return courtRepo.save(court);
-        }
-        throw new IllegalArgumentException("Only admin can add courts");
+    
+    // Create a new court 
+    public Court createCourt(String name, String description, String sportType, String address, BigDecimal pricePerHour) {
+        Court court = new Court();  // Create new Court object
+        court.setName(name);  // Set name
+        court.setDescription(description);  // Set description
+        court.setSportType(sportType);  // Set sport type
+        court.setAddress(address);  // Set address
+        court.setPricePerHour(pricePerHour);  // Set price
+        court.setActive(true);  // Force active = true (court is available)
+        return courtRepo.save(court);  // Save to database and return saved court
     }
-    public void deleteCourt(Court court , User user){
-        if(user.isAdmin()){
-            courtRepo.delete(court);
-            return;
+    
+    // Get court by ID
+    public Court getCourtById(Long id) {
+        Optional<Court> court = courtRepo.findById(id);  // Find court in DB by ID
+        if (court.isPresent()) {  // if	court exists Return the court object
+            return court.get();   
         }
-        throw new IllegalArgumentException("Only admin can delete courts");
+        return null;  // else Return null 
+    }
+    
+    // Delete court (soft delete (not from the DB) (just mark as inactive))
+    public boolean deleteCourt(Long id) {
+        Optional<Court> court = courtRepo.findById(id);  // Find court in DB
+        if (court.isPresent()) {  // if court exists
+            Court existingCourt = court.get();  // Get the court object
+            existingCourt.setActive(false);  // Mark as inactive (soft delete)
+            courtRepo.save(existingCourt);  // Save changes to DB
+            return true;  // Return true (success)
+        }
+        return false;  // else Return false (court not found)
+    }
+    
+    // Hard delete (completely remove from database) - optional
+    public boolean hardDeleteCourt(Long id) {
+        if (courtRepo.existsById(id)) {  // Check if court exists
+            courtRepo.deleteById(id);  // Permanently delete from DB
+            return true;  // Return true (success)
+        }
+        return false;  //else Return false (court not found)
+    }
+    // Update court information
+    public Court updateCourt(Long id, String name, String description, String sportType, String address, BigDecimal pricePerHour) {
+        Optional<Court> court = courtRepo.findById(id);  // Find court in DB
+        if (court.isPresent()) {  // If court exists
+            Court existingCourt = court.get();  // Get the court object
+            existingCourt.setName(name);  // Update name
+            existingCourt.setDescription(description);  // Update description
+            existingCourt.setSportType(sportType);  // Update sport type
+            existingCourt.setAddress(address);  // Update address
+            existingCourt.setPricePerHour(pricePerHour);  // Update price
+            return courtRepo.save(existingCourt);  // Save and return updated court
+        }
+        return null;  // else Return null (court not found)
     }
 
-    public Optional<Court> resolveCourt(Court court) {
-        if (court == null || court.getId() == null) {
-            return Optional.empty();
-        }
-        return courtRepo.findById(court.getId());
-    }
-
-    public BigDecimal calculateTotalPrice(TimeSlot slot, Court court) {
-        long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
-        if (hours <= 0) {
-            throw new IllegalArgumentException("Booking duration must be at least one hour.");
-        }
-        return court.getPricePerHour().multiply(BigDecimal.valueOf(hours));
-    }
-
-    public Optional<Court> findCourtById(Long id) {
-        return courtRepo.findById(id);  
-    }
 }

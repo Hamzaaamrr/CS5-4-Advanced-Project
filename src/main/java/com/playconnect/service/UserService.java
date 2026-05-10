@@ -2,32 +2,65 @@ package com.playconnect.service;
 
 import com.playconnect.entity.User;
 import com.playconnect.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 
-@Service
+@Service // This class handles services logic (login, register)
 public class UserService {
-    //Register User, Login Authentication Functions
-
-    private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public Optional<User> resolveUser(User user) {
-        if (user.getId() != null) {
-            return userRepository.findById(user.getId());
+    @Autowired // Spring automatically creates UserRepository here (no need for *new*)
+    private UserRepository userRepository;
+    // Login with email OR username
+    public User authenticate(String emailOrUsername, String password) {
+        // Try to find by email first
+        Optional<User> user = userRepository.findByEmail(emailOrUsername);
+        // If not found by email, try by username
+        if (user.isEmpty()) {
+            user = userRepository.findByUsername(emailOrUsername);
         }
-        return userRepository.findByEmail(user.getEmail());
+        // Check password if it is == to the password of the user
+        if (user.isPresent() && user.get().getPassword().equals(password)) {
+            return user.get();// Return the object (User)
+        }
+        
+        return null; // else(Login failed)
     }
-
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    // Get user by ID
+    public User getUserById(Long id) {
+        Optional<User> user = userRepository.findById(id);  // Find user in DB
+        if (user.isPresent()) // Check if user exists
+        	{
+            return user.get(); // Return the User object
+        }
+        return null; // User not found
     }
-
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    // Register new user
+    public boolean registerPlayer(String firstName, String lastName, String username, String email, String password) {
+        // Check if username exists
+        if (userRepository.findByUsername(username).isPresent()) {
+            return false; // Username taken
+        }
+        // Check if email exists
+        if (userRepository.findByEmail(email).isPresent()) {
+            return false; // Email already registered
+        }
+        // Create new user
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setRole("PLAYER");
+        user.setActive(true);
+        userRepository.save(user); // Save to DB
+        return true;  // Registration successful
+    }
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+    public User findByUsername(String name) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByUsername'");
     }
 }
