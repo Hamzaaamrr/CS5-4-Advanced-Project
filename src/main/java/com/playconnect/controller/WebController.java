@@ -233,12 +233,30 @@ public class WebController {
     @GetMapping("/bookings")
     public String showMyBookings(Model model, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        return populateBookingsPage(model, userId, bookingService.getBookingsForUser(userId), "upcoming");
+    }
+
+    @GetMapping("/bookings/cancelled")
+    public String showCancelledBookings(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
 
         if (userId == null) {
             return "redirect:/login";
         }
 
-        model.addAttribute("bookings",bookingService.getBookingsForUser(userId));
+        return populateBookingsPage(model, userId, bookingService.getCancelledBookingsForUser(userId), "cancelled");
+    }
+
+    private String populateBookingsPage(Model model, Long userId, List<Booking> bookings, String activeTab) {
+        User currentUser = userService.getUserById(userId);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("isAdmin", currentUser != null && currentUser.isAdmin());
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("activeTab", activeTab);
 
         return "my-bookings";
     }
@@ -257,4 +275,6 @@ public class WebController {
 
         return "redirect:/bookings";
     }
+
+    
 }

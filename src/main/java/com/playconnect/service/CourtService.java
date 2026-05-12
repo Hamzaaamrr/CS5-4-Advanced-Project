@@ -19,6 +19,10 @@ public class CourtService {
         return courtRepo.findByActiveTrue();  // Query: SELECT * FROM courts WHERE active = true
     }
     
+    public List<Court> getAllCourts() {
+        return courtRepo.findAll();  // Query: SELECT * FROM courts (all courts regardless of active status)
+    }
+
     // Create a new court 
     public Court createCourt(String name, String description, String sportType, String address, BigDecimal pricePerHour) {
         Court court = new Court();  // Create new Court object
