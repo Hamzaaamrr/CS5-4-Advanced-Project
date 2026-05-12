@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PlayConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffb1c7",
+                        "primary-container": "#ff4993",
+                        "on-primary-container": "#59002b",
+                        "secondary": "#e6feff",
+                        "secondary-container": "#00f4fe",
+                        "error": "#ffb4ab",
+                        "surface": "#13131b",
+                        "background": "#13131b",
+                        "on-background": "#e4e1ed",
+                        "surface-container": "#1f1f27",
+                        "surface-container-high": "#292932"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .icon { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        body {
+            background: #13131b;
+            color: #e4e1ed;
+            font-family: 'Lexend', sans-serif;
+            min-height: 100vh;
+        }
+
+        .site-header {
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 1.5rem; height: 4rem;
+            background: rgba(10, 10, 18, 0.8);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em; color: #FF2E8C; }
+        .site-nav { display: none; gap: 2rem; align-items: center; }
+        @media (min-width: 768px) { .site-nav { display: flex; } }
+
+        .nav-link { color: #94a3b8; font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+        .nav-link:hover { color: #FF2E8C; }
+        .nav-link-active { color: #FF2E8C; border-bottom: 2px solid #FF2E8C; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+
+        .btn-add-court {
+            display: flex; align-items: center; gap: 0.375rem;
+            padding: 0.4rem 1rem; border-radius: 9999px; border: none; cursor: pointer;
+            background: #FF2E8C; color: #fff;
+            font-size: 0.8rem; font-weight: 700; font-family: 'Lexend', sans-serif;
+            box-shadow: 0 0 16px rgba(255,46,140,0.4);
+            text-decoration: none; transition: opacity 0.2s;
+        }
+        .btn-add-court:hover { opacity: 0.85; }
+
+        .btn-logout {
+            padding: 0.4rem 1rem; border-radius: 9999px; cursor: pointer;
+            background: transparent; border: 1px solid rgba(255,100,100,0.3);
+            color: #ffb4ab; font-size: 0.75rem; font-weight: 700;
+            font-family: 'Lexend', sans-serif; transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,100,100,0.1); }
+
+        .main { padding: 6rem 1.5rem 4rem; max-width: 80rem; margin: 0 auto; }
+
+        .hero {
+            position: relative; border-radius: 1.5rem; overflow: hidden;
+            margin-bottom: 2rem; padding: 2rem;
+            background: linear-gradient(135deg, rgba(255,46,140,0.22), rgba(0,244,254,0.12));
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: auto -20% -60% auto;
+            width: 18rem;
+            height: 18rem;
+            border-radius: 9999px;
+            background: radial-gradient(circle, rgba(255,46,140,0.22), transparent 70%);
+            pointer-events: none;
+        }
+        .hero-title { font-size: 2.4rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; }
+        .hero-sub { color: #cbd5e1; font-size: 0.875rem; max-width: 42rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+        @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+        .stat-card {
+            background: rgba(26, 26, 46, 0.72);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            padding: 1.15rem 1.25rem;
+        }
+        .stat-card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+        }
+        .stat-card-link:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,46,140,0.26);
+            box-shadow: 0 14px 30px rgba(0,0,0,0.22), 0 0 18px rgba(255,46,140,0.08);
+            background: rgba(32, 32, 50, 0.82);
+        }
+        .stat-label { color: #94a3b8; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.45rem; }
+        .stat-value { color: #fff; font-size: 1.9rem; font-weight: 800; line-height: 1; }
+        .stat-note { color: #64748b; font-size: 0.75rem; margin-top: 0.35rem; }
+
+        .click-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.55rem;
+            color: #ffb1c7;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
+        .bookings-panel {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1.25rem;
+            overflow: hidden;
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .bookings-table thead {
+            background: rgba(255,255,255,0.03);
+        }
+        .bookings-table th,
+        .bookings-table td {
+            padding: 1rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.875rem;
+        }
+        .bookings-table th {
+            color: #94a3b8;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .bookings-table td { color: #e4e1ed; }
+
+        .booking-user { font-weight: 700; color: #fff; }
+        .booking-muted { color: #94a3b8; font-size: 0.78rem; margin-top: 0.2rem; }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.3rem 0.7rem; border-radius: 9999px; font-size: 0.74rem; font-weight: 700;
+            border: 1px solid transparent;
+        }
+        .status-confirmed { background: rgba(0,244,254,0.12); color: #bdfcff; border-color: rgba(0,244,254,0.24); }
+        .status-pending { background: rgba(255,177,199,0.12); color: #ffceda; border-color: rgba(255,177,199,0.24); }
+        .status-cancelled { background: rgba(255,180,171,0.12); color: #ffb4ab; border-color: rgba(255,180,171,0.24); }
+
+        .btn-cancel {
+            padding: 0.5rem 0.85rem; border-radius: 0.65rem; cursor: pointer;
+            background: transparent; border: 1px solid rgba(255,180,171,0.18);
+            color: #ffb4ab; font-size: 0.8rem; font-weight: 700;
+            font-family: 'Lexend', sans-serif; transition: background 0.2s;
+        }
+        .btn-cancel:hover { background: rgba(255,180,171,0.1); }
+        .btn-cancel:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .empty {
+            padding: 3rem;
+            text-align: center;
+        }
+        .empty-icon { font-size: 3rem !important; color: #64748b; display: block; margin-bottom: 1rem; }
+        .empty-title { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+        .empty-sub { color: #94a3b8; font-size: 0.875rem; }
+
+        .users-panel {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1.25rem;
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table thead {
+            background: rgba(255,255,255,0.03);
+        }
+        .users-table th,
+        .users-table td {
+            padding: 1rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.875rem;
+        }
+        .users-table th {
+            color: #94a3b8;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .user-name { font-weight: 700; color: #fff; }
+        .user-meta { color: #94a3b8; font-size: 0.78rem; margin-top: 0.2rem; }
+        .active-badge {
+            display: inline-flex; align-items: center;
+            padding: 0.3rem 0.7rem;
+            border-radius: 9999px;
+            background: rgba(0,244,254,0.12);
+            color: #bdfcff;
+            border: 1px solid rgba(0,244,254,0.24);
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+        .btn-delete-user {
+            padding: 0.5rem 0.85rem; border-radius: 0.65rem; cursor: pointer;
+            background: transparent; border: 1px solid rgba(255,100,100,0.22);
+            color: #ffb4ab; font-size: 0.8rem; font-weight: 700;
+            font-family: 'Lexend', sans-serif; transition: background 0.2s, transform 0.2s;
+        }
+        .btn-delete-user:hover {
+            background: rgba(255,100,100,0.12);
+            transform: translateY(-1px);
+        }
+        .btn-delete-user:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .users-mobile {
+            display: grid;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .user-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        .user-top { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+        .user-row { display: flex; justify-content: space-between; gap: 1rem; color: #94a3b8; font-size: 0.8rem; margin-top: 0.35rem; }
+        .user-value { color: #e4e1ed; text-align: right; }
+
+        .alert { padding: 0.875rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 500; margin-bottom: 1.5rem; text-align: center; }
+        .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
+        .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+
+        .mobile-cards { display: grid; gap: 1rem; padding: 1rem; }
+        .booking-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        .booking-top { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+        .booking-row { display: flex; justify-content: space-between; gap: 1rem; color: #94a3b8; font-size: 0.8rem; margin-top: 0.35rem; }
+        .booking-value { color: #e4e1ed; text-align: right; }
+
+        @media (max-width: 767px) {
+            .bookings-table { display: none; }
+        }
+        @media (min-width: 768px) {
+            .mobile-cards { display: none; }
+        }
+        @media (max-width: 767px) {
+            .users-table { display: none; }
+        }
+        @media (min-width: 768px) {
+            .users-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <span class="logo">PlayConnect</span>
+
+        <nav class="site-nav">
+            <a th:href="@{/home}" class="nav-link">Dashboard</a>
+            <a th:href="@{/bookings}" class="nav-link">My Bookings</a>
+            <a th:if="${isAdmin}" th:href="@{/admin/dashboard}" class="nav-link-active">Admin Dashboard</a>
+        </nav>
+
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <form method="post" th:action="@{/logout}" style="display:inline;">
+                <button class="btn-logout" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <h1 class="hero-title">Admin Dashboard</h1>
+            <p class="hero-sub">Review platform activity and manage every booking in one place. You can cancel any reservation from here using the same booking cancellation logic as the user flow.</p>
+        </section>
+
+        <div class="stats-grid">
+            <a href="#users-section" class="stat-card stat-card-link">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" th:text="${totalUsers}">0</div>
+                <div class="stat-note" th:text="${activeUsers} + ' active'">0 active</div>
+                <span class="click-hint">
+                    View users
+                    <span class="material-symbols-outlined icon" style="font-size:0.95rem;">arrow_downward</span>
+                </span>
+            </a>
+            <div class="stat-card">
+                <div class="stat-label">Courts</div>
+                <div class="stat-value" th:text="${totalCourts}">0</div>
+                <div class="stat-note" th:text="${activeCourts} + ' active courts'">0 active courts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Bookings</div>
+                <div class="stat-value" th:text="${totalBookings}">0</div>
+                <div class="stat-note" th:text="${confirmedBookings} + ' confirmed'">0 confirmed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Admin Access</div>
+                <div class="stat-value">ON</div>
+                <div class="stat-note">Restricted to administrators</div>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="section-header">
+            <h2 class="section-title">All Bookings</h2>
+        </div>
+
+        <section class="bookings-panel">
+            <div th:if="${bookings != null and bookings.size() > 0}">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking</th>
+                            <th>Court</th>
+                            <th>Schedule</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="booking : ${bookings}">
+                            <td>
+                                <div class="booking-user" th:text="${booking.user != null ? booking.user.firstName + ' ' + booking.user.lastName : 'Unknown User'}">User Name</div>
+                                <div class="booking-muted" th:text="${booking.user != null ? booking.user.email : 'No email'}">email@example.com</div>
+                            </td>
+                            <td>
+                                <div class="booking-user" th:text="${booking.court != null ? booking.court.name : 'Unknown Court'}">Court</div>
+                                <div class="booking-muted" th:text="${booking.court != null ? booking.court.sportType : ''}">Sport</div>
+                            </td>
+                            <td>
+                                <div th:text="${booking.timeSlot != null ? booking.timeSlot.date : 'Unknown date'}">Date</div>
+                                <div class="booking-muted" th:text="${booking.timeSlot != null ? booking.timeSlot.startTime + ' - ' + booking.timeSlot.endTime : ''}">Time</div>
+                            </td>
+                            <td>
+                                <span th:if="${booking.bookingStatus.name() == 'CONFIRMED'}" class="status-pill status-confirmed">Confirmed</span>
+                                <span th:if="${booking.bookingStatus.name() == 'PENDING'}" class="status-pill status-pending">Pending</span>
+                                <span th:if="${booking.bookingStatus.name() == 'CANCELLED'}" class="status-pill status-cancelled">Cancelled</span>
+                            </td>
+                            <td th:text="${booking.totalPrice}">$0.00</td>
+                            <td>
+                                <form method="post" th:action="@{'/admin/bookings/cancel/' + ${booking.id}}" style="display:inline;">
+                                    <button type="submit" class="btn-cancel" th:disabled="${booking.bookingStatus.name() == 'CANCELLED'}">Cancel</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="mobile-cards">
+                    <div class="booking-card" th:each="booking : ${bookings}">
+                        <div class="booking-top">
+                            <div>
+                                <div class="booking-user" th:text="${booking.user != null ? booking.user.firstName + ' ' + booking.user.lastName : 'Unknown User'}">User Name</div>
+                                <div class="booking-muted" th:text="${booking.user != null ? booking.user.email : 'No email'}">email@example.com</div>
+                            </div>
+                            <span th:if="${booking.bookingStatus.name() == 'CONFIRMED'}" class="status-pill status-confirmed">Confirmed</span>
+                            <span th:if="${booking.bookingStatus.name() == 'PENDING'}" class="status-pill status-pending">Pending</span>
+                            <span th:if="${booking.bookingStatus.name() == 'CANCELLED'}" class="status-pill status-cancelled">Cancelled</span>
+                        </div>
+                        <div class="booking-row"><span>Court</span><span class="booking-value" th:text="${booking.court != null ? booking.court.name : 'Unknown Court'}">Court</span></div>
+                        <div class="booking-row"><span>Sport</span><span class="booking-value" th:text="${booking.court != null ? booking.court.sportType : ''}">Sport</span></div>
+                        <div class="booking-row"><span>Date</span><span class="booking-value" th:text="${booking.timeSlot != null ? booking.timeSlot.date : 'Unknown date'}">Date</span></div>
+                        <div class="booking-row"><span>Time</span><span class="booking-value" th:text="${booking.timeSlot != null ? booking.timeSlot.startTime + ' - ' + booking.timeSlot.endTime : ''}">Time</span></div>
+                        <div class="booking-row"><span>Price</span><span class="booking-value" th:text="${booking.totalPrice}">$0.00</span></div>
+                        <div style="margin-top:0.9rem;">
+                            <form method="post" th:action="@{'/admin/bookings/cancel/' + ${booking.id}}">
+                                <button type="submit" class="btn-cancel" th:disabled="${booking.bookingStatus.name() == 'CANCELLED'}" style="width:100%; justify-content:center;">Cancel booking</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${bookings == null or bookings.size() == 0}" class="empty">
+                <span class="material-symbols-outlined empty-icon icon">event_busy</span>
+                <h3 class="empty-title">No Bookings Found</h3>
+                <p class="empty-sub">When users make reservations, they will appear here for admin review.</p>
+            </div>
+        </section>
+
+        <div class="section-header" id="users-section" style="margin-top:2rem;">
+            <h2 class="section-title">All Users</h2>
+        </div>
+
+        <section class="users-panel">
+            <div th:if="${users != null and users.size() > 0}">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Active Bookings</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="userItem : ${users}">
+                            <td>
+                                <div class="user-name" th:text="${userItem.fullName}">Full Name</div>
+                                <div class="user-meta" th:text="${userItem.username}">username</div>
+                            </td>
+                            <td th:text="${userItem.email}">email@example.com</td>
+                            <td>
+                                <span class="active-badge" th:text="${userBookingCounts[userItem.id]} + ' active'">0 active</span>
+                            </td>
+                            <td>
+                                <form method="post" th:action="@{'/admin/users/delete/' + ${userItem.id}}" style="display:inline;">
+                                    <button type="submit" class="btn-delete-user" th:disabled="${currentUser != null and currentUser.id == userItem.id}">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="users-mobile">
+                    <div class="user-card" th:each="userItem : ${users}">
+                        <div class="user-top">
+                            <div>
+                                <div class="user-name" th:text="${userItem.fullName}">Full Name</div>
+                                <div class="user-meta" th:text="${userItem.email}">email@example.com</div>
+                            </div>
+                            <span class="active-badge" th:text="${userBookingCounts[userItem.id]} + ' active'">0 active</span>
+                        </div>
+                        <div class="user-row"><span>Username</span><span class="user-value" th:text="${userItem.username}">username</span></div>
+                        <div class="user-row"><span>Email</span><span class="user-value" th:text="${userItem.email}">email@example.com</span></div>
+                        <div class="user-row"><span>Active bookings</span><span class="user-value" th:text="${userBookingCounts[userItem.id]}">0</span></div>
+                        <div style="margin-top:0.9rem;">
+                            <form method="post" th:action="@{'/admin/users/delete/' + ${userItem.id}}">
+                                <button type="submit" class="btn-delete-user" th:disabled="${currentUser != null and currentUser.id == userItem.id}" style="width:100%; justify-content:center;">Delete user</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${users == null or users.size() == 0}" class="empty">
+                <span class="material-symbols-outlined empty-icon icon">group_off</span>
+                <h3 class="empty-title">No Users Found</h3>
+                <p class="empty-sub">Registered users will appear here with their active booking count.</p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

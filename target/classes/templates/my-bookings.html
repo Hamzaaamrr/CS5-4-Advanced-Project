@@ -106,6 +106,11 @@
             font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer;
             box-shadow: 0 0 20px rgba(255,46,140,0.3);
         }
+        .tab-active-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
         .tab {
             padding: 0.5rem 1.5rem; border: none; border-radius: 9999px;
             background: rgba(255,255,255,0.05); color: #94a3b8;
@@ -129,10 +134,26 @@
         @media (min-width: 768px) { .card { flex-direction: row; } }
 
         .card-thumb {
+            position: relative;
             width: 100%; height: 7rem; border-radius: 0.75rem; flex-shrink: 0;
             background: linear-gradient(135deg, rgba(255,46,140,0.2), rgba(0,244,254,0.2));
+            overflow: hidden;
         }
         @media (min-width: 768px) { .card-thumb { width: 7rem; } }
+
+        .card-thumb-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,10,18,0.3), transparent 65%);
+        }
 
         .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
 
@@ -144,10 +165,12 @@
         }
         .badge-court-confirmed { background: rgba(0,244,254,0.2); color: #e6feff; border-color: rgba(0,244,254,0.3); }
         .badge-court-pending   { background: rgba(255,177,199,0.2); color: #ffb1c7; border-color: rgba(255,177,199,0.3); }
+        .badge-court-cancelled { background: rgba(255,180,171,0.2); color: #ffb4ab; border-color: rgba(255,180,171,0.3); }
 
         .status { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; }
         .status-confirmed { color: #00f4fe; }
         .status-pending   { color: #ffb1c7; }
+        .status-cancelled  { color: #ffb4ab; }
         .status-icon { font-size: 1rem !important; }
 
         /* info */
@@ -172,6 +195,7 @@
         }
         .btn-cancel:hover { background: rgba(255,180,171,0.1); }
         .cancel-icon { font-size: 1rem !important; }
+        .btn-cancel:disabled { opacity: 0.45; cursor: not-allowed; }
 
         /* ── Empty state ─────────────────────────────────────── */
         .empty {
@@ -202,6 +226,8 @@
         <nav class="site-nav">
             <a th:href="@{/}" class="nav-link">Dashboard</a>
             <a th:href="@{/bookings}" class="nav-link-active">My Bookings</a>
+            <a th:if="${isAdmin}" th:href="@{/admin/dashboard}" class="nav-link">Admin Dashboard</a>
+
         </nav>
 
         <!-- Right side -->
@@ -225,8 +251,14 @@
 
         <!-- Filter Tabs -->
         <div class="filter-bar">
-            <button class="tab-active">Upcoming</button>
-            <button class="tab">Cancelled</button>
+            <a th:href="@{/bookings}"
+               th:class="${activeTab == 'upcoming' ? 'tab-active tab-active-link' : 'tab tab-active-link'}">
+                Upcoming
+            </a>
+            <a th:href="@{/bookings/cancelled}"
+               th:class="${activeTab == 'cancelled' ? 'tab-active tab-active-link' : 'tab tab-active-link'}">
+                Cancelled
+            </a>
         </div>
 
         <!-- Bookings Grid -->
@@ -234,12 +266,15 @@
 
             <!-- Booking Card -->
             <div th:if="${bookings != null and bookings.size() > 0}" th:each="booking : ${bookings}" class="card">
-                <div class="card-thumb"></div>
+                <div class="card-thumb">
+                    <img th:if="${booking.court != null and booking.court.thumbnailData != null}" th:src="${booking.court.thumbnailData}" alt="Court photo" class="card-thumb-image" />
+                    <div class="card-thumb-overlay"></div>
+                </div>
                 <div class="card-body">
                     <div>
                         <div class="badge-row">
                             <span class="badge-court"
-                                  th:classappend="${booking.bookingStatus.name() == 'CONFIRMED' ? 'badge-court-confirmed' : 'badge-court-pending'}"
+                                  th:classappend="${booking.bookingStatus.name() == 'CONFIRMED' ? 'badge-court-confirmed' : (booking.bookingStatus.name() == 'CANCELLED' ? 'badge-court-cancelled' : 'badge-court-pending')}"
                                   th:text="${booking.court.sportType + ' - Court ' + booking.court.id}">Court Type</span>
 
                             <span th:if="${booking.bookingStatus.name() == 'CONFIRMED'}" class="status status-confirmed">
@@ -249,6 +284,10 @@
                             <span th:if="${booking.bookingStatus.name() == 'PENDING'}" class="status status-pending">
                                 <span class="material-symbols-outlined status-icon icon-fill">pending</span>
                                 Pending
+                            </span>
+                            <span th:if="${booking.bookingStatus.name() == 'CANCELLED'}" class="status status-cancelled">
+                                <span class="material-symbols-outlined status-icon icon-fill">cancel</span>
+                                Cancelled
                             </span>
                         </div>
 
@@ -267,22 +306,25 @@
                     </div>
 
                     <div class="card-actions">
-                        <button class="btn-reschedule">Reschedule</button>
-                        <form method="post" th:action="@{/cancel}" style="display:inline;">
+                        
+                        <form method="post" th:action="@{/cancel}" style="display:inline;" th:if="${booking.bookingStatus.name() != 'CANCELLED'}">
                             <input type="hidden" name="bookingId" th:value="${booking.id}">
                             <button type="submit" class="btn-cancel">
-                                <span class="material-symbols-outlined cancel-icon icon">cancel</span>
+                                Cancel
                             </button>
                         </form>
+                        <button type="button" class="btn-cancel" th:if="${booking.bookingStatus.name() == 'CANCELLED'}" disabled>
+                            Cancelled
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Empty State -->
             <div th:if="${bookings == null or bookings.size() == 0}" class="empty">
-                <h3 class="empty-title">No Bookings Yet</h3>
-                <p class="empty-sub">Start booking courts to manage your sessions here.</p>
-                <a href="/" class="empty-cta">Book a Court</a>
+                <h3 class="empty-title" th:text="${activeTab == 'cancelled' ? 'No Cancelled Bookings Yet' : 'No Bookings Yet'}">No Bookings Yet</h3>
+                <p class="empty-sub" th:text="${activeTab == 'cancelled' ? 'Cancelled bookings tied to your account will appear here.' : 'Start booking courts to manage your sessions here.'}">Start booking courts to manage your sessions here.</p>
+                <a th:if="${activeTab != 'cancelled'}" href="/" class="empty-cta">Book a Court</a>
             </div>
 
         </div>

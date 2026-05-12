@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 // import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebController {
@@ -94,7 +96,7 @@ public class WebController {
     }
 
     @GetMapping("/home")
-    public String showCourts(Model model, HttpSession session) {
+    public String showCourts(@RequestParam(required = false, defaultValue = "") String search, Model model, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         User currentUser = null;
 
@@ -113,12 +115,13 @@ public class WebController {
             }
             model.addAttribute("isAdmin", isAdmin);
 
-            List<Court> courts = courtService.getActiveCourts();
+            List<Court> courts = courtService.searchActiveCourts(search);
             if (courts == null) {
                 courts = List.of(); //0 element list if no courts found
             }
 
             model.addAttribute("courts", courts);
+            model.addAttribute("searchTerm", search);
             return "home";
     }
 
@@ -133,13 +136,15 @@ public class WebController {
             return "redirect:/home";
         }
 
+        model.addAttribute("currentUser", user);
+        model.addAttribute("isAdmin", true);
         model.addAttribute("court", new Court());
         model.addAttribute("sportTypes", SportType.values());
         return "court-form";
     }
 
     @PostMapping("/courts")
-    public String createCourt(@ModelAttribute Court court, HttpSession session) {
+    public String createCourt(@ModelAttribute Court court, @RequestParam(required = false) MultipartFile thumbnailFile, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) {
             return "redirect:/login";
@@ -149,29 +154,30 @@ public class WebController {
             return "redirect:/home";
         }
 
-        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour());
+        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour(), thumbnailFile);
         return "redirect:/home";
     }
 
     @PostMapping("/courts/{courtId}/delete")
-    public String removeCourt(@PathVariable Long courtId, HttpSession session, Model model){
+    public String removeCourt(@PathVariable Long courtId, HttpSession session, Model model, RedirectAttributes ra){
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
-        User user = userService.getUserById(userId);
 
         if(userId == null){
             return "redirect:/login";
         }
+
+        User user = userService.getUserById(userId);
         if (!user.isAdmin()) {
-            model.addAttribute("error", "You do not have permission to delete this court.");
+            ra.addFlashAttribute("error", "You do not have permission to delete this court.");
             return "redirect:/home";
         }
 
         try {
             courtService.hardDeleteCourt(courtId);
-            model.addAttribute("success", "Court deleted successfully.");
+            ra.addFlashAttribute("success", "Court has been permanently deleted.");
             return "redirect:/home";
         } catch (Exception e) {
-            model.addAttribute("error", "Error deleting court: " + e.getMessage());
+            ra.addFlashAttribute("error", "Error deleting court: " + e.getMessage());
             return "redirect:/home";
         }
     }
@@ -233,12 +239,30 @@ public class WebController {
     @GetMapping("/bookings")
     public String showMyBookings(Model model, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        return populateBookingsPage(model, userId, bookingService.getBookingsForUser(userId), "upcoming");
+    }
+
+    @GetMapping("/bookings/cancelled")
+    public String showCancelledBookings(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
 
         if (userId == null) {
             return "redirect:/login";
         }
 
-        model.addAttribute("bookings",bookingService.getBookingsForUser(userId));
+        return populateBookingsPage(model, userId, bookingService.getCancelledBookingsForUser(userId), "cancelled");
+    }
+
+    private String populateBookingsPage(Model model, Long userId, List<Booking> bookings, String activeTab) {
+        User currentUser = userService.getUserById(userId);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("isAdmin", currentUser != null && currentUser.isAdmin());
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("activeTab", activeTab);
 
         return "my-bookings";
     }
@@ -257,4 +281,6 @@ public class WebController {
 
         return "redirect:/bookings";
     }
+
+    
 }

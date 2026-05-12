@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,10 +23,13 @@ public class Court {
     private String description;
     private String sportType;
     private String address;
-    private int NumofPlayers;
     
     @Column(nullable = false)
     private BigDecimal pricePerHour;
+
+    @Lob
+    @Column(columnDefinition = "CLOB")
+    private String thumbnailData;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -78,13 +82,14 @@ public class Court {
         this.pricePerHour = pricePerHour;
     }
 
-    public int getNumofPlayers() {
-        return NumofPlayers;
+    public String getThumbnailData() {
+        return thumbnailData;
     }
 
-    public void setNumofPlayers(int numofPlayers) {
-        NumofPlayers = numofPlayers;
+    public void setThumbnailData(String thumbnailData) {
+        this.thumbnailData = thumbnailData;
     }
+
 
     public boolean isActive() {
         return active;
@@ -94,7 +99,4 @@ public class Court {
         this.active = active;
     }
 
-    public boolean CourtValid() {
-        return NumofPlayers >= 1;
-    }
 }

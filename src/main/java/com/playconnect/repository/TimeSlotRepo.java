@@ -13,5 +13,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TimeSlotRepo extends JpaRepository<TimeSlot, Long>{
     List<TimeSlot> findByCourtIdAndDateOrderByStartTimeAsc(Long courtId, LocalDate date);
+    List<TimeSlot> findByCourtId(Long courtId);
     Optional<TimeSlot> findByCourtIdAndDateAndStartTimeAndEndTime(Long courtId, LocalDate date, LocalTime startTime, LocalTime endTime);
 }

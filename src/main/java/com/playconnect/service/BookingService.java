@@ -47,6 +47,10 @@ public class BookingService {
         return bookings;
     }
 
+    public List<Booking> getAllBookings() {
+        return BR.findAll();
+    }
+
     public List<Booking> getBookingsForUser(Long userId) {
         User user = UR.findById(userId).orElse(null);
         if (user == null) {
@@ -66,6 +70,26 @@ public class BookingService {
         }
 
         return userBookings;
+    }
+
+    public List<Booking> getCancelledBookingsForUser(Long userId) {
+        User user = UR.findById(userId).orElse(null);
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        List<Booking> all = BR.findAll();
+        List<Booking> cancelledBookings = new ArrayList<>();
+
+        for (Booking booking : all) {
+            if (booking.getUser() != null && booking.getUser().getId() != null &&
+                booking.getUser().getId().equals(userId) &&
+                booking.getBookingStatus().equals(Booking.BookingStatus.CANCELLED)) {
+                cancelledBookings.add(booking);
+            }
+        }
+
+        return cancelledBookings;
     }
 
     @Transactional

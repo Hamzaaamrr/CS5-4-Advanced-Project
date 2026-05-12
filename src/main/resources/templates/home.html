@@ -117,12 +117,91 @@
 
         /* ── Section header ──────────────────────────────────── */
         .section-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
             margin-bottom: 1.25rem;
         }
         .section-title { font-size: 1.125rem; font-weight: 700; color: #fff; }
         .view-all { font-size: 0.8rem; font-weight: 600; color: #FF2E8C; text-decoration: none; }
         .view-all:hover { text-decoration: underline; }
+
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .search-pill {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            transition: width 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .search-pill:hover,
+        .search-pill:focus-within {
+            width: 18rem;
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,46,140,0.25);
+            box-shadow: 0 0 0 3px rgba(255,46,140,0.08);
+        }
+
+        .search-input {
+            width: 100%;
+            height: 2.75rem;
+            padding: 0 0.9rem 0 0.9rem;
+            border: none;
+            background: transparent;
+            color: #000;
+            caret-color: #000;
+            font-family: 'Lexend', sans-serif;
+            font-size: 0.78rem;
+            outline: none;
+            opacity: 0;
+            transform: translateX(0.25rem);
+            transition: opacity 0.18s ease 0.05s, transform 0.18s ease 0.05s;
+        }
+        .search-pill:hover .search-input,
+        .search-pill:focus-within .search-input {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .search-input::placeholder { color: #64748b; font-size: 0.7rem; }
+
+        .search-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 2.75rem;
+            height: 2.75rem;
+            border: none;
+            border-radius: 9999px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .search-pill:hover .search-btn,
+        .search-pill:focus-within .search-btn {
+            background: #FF2E8C;
+        }
+        .search-btn:hover { color: #fff; }
+
+        @media (max-width: 640px) {
+            .section-header { align-items: flex-start; }
+            .search-pill:hover,
+            .search-pill:focus-within {
+                width: 100%;
+            }
+        }
 
         /* ── Court cards grid ────────────────────────────────── */
         .courts-grid {
@@ -149,6 +228,13 @@
             position: relative; height: 11rem;
             background: linear-gradient(135deg, rgba(255,46,140,0.2), rgba(0,244,254,0.15));
             overflow: hidden;
+        }
+        .court-thumb {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .court-img-overlay {
             position: absolute; inset: 0;
@@ -232,6 +318,7 @@
         <nav class="site-nav">
             <a th:href="@{/}" class="nav-link-active">Dashboard</a>
             <a th:href="@{/bookings}" class="nav-link">My Bookings</a>
+            <a th:if="${isAdmin}" th:href="@{/admin/dashboard}" class="nav-link">Admin Dashboard</a>
             
         </nav>
 
@@ -256,10 +343,25 @@
         <!-- Courts Section -->
         <div class="section-header">
             <h2 class="section-title">Select Court</h2>
-            <a th:if="${isAdmin}" th:href="@{/courts/new}" class="btn-add-court">
-                <span class="material-symbols-outlined icon" style="font-size:1rem;">add</span>
-                Add Court
-            </a>
+            <div class="section-actions">
+                <form class="search-pill" method="get" th:action="@{/home}">
+                    <input
+                        class="search-input"
+                        type="text"
+                        name="search"
+                        th:value="${searchTerm}"
+                        placeholder="Search name, location, or category"
+                    />
+                    <button type="submit" class="search-btn" aria-label="Search courts">
+                        <span class="material-symbols-outlined icon" style="font-size:1.1rem;">search</span>
+                    </button>
+                </form>
+
+                <a th:if="${isAdmin}" th:href="@{/courts/new}" class="btn-add-court">
+                    <span class="material-symbols-outlined icon" style="font-size:1rem;">add</span>
+                    Add Court
+                </a>
+            </div>
         </div>
 
         <div class="courts-grid">
@@ -271,6 +373,7 @@
             <!-- Court Card -->
             <div class="court-card" th:each="court : ${courts}">
                 <div class="court-img">
+                    <img th:if="${court.thumbnailData != null}" th:src="${court.thumbnailData}" alt="Court photo" class="court-thumb" />
                     <div class="court-img-overlay"></div>
                     <span class="sport-badge" th:text="${court.sportType}">Sport</span>
                 </div>
@@ -300,8 +403,8 @@
             <!-- Empty state -->
             <div th:if="${courts == null or courts.size() == 0}" class="empty">
                 <span class="material-symbols-outlined empty-icon icon">sports_tennis</span>
-                <h3 class="empty-title">No Courts Available</h3>
-                <p class="empty-sub">Check back later or add a new court.</p>
+                <h3 class="empty-title" th:text="${searchTerm != null and !searchTerm.isBlank() ? 'No Courts Found' : 'No Courts Available'}">No Courts Available</h3>
+                <p class="empty-sub" th:text="${searchTerm != null and !searchTerm.isBlank() ? 'Try a different name or location.' : 'Check back later or add a new court.'}">Check back later or add a new court.</p>
             </div>
 
         </div>

@@ -35,8 +35,54 @@
         .section-title{ font-size:1.25rem; font-weight:800; color: #fff; }
 
         label{ display:block; font-size:0.8rem; font-weight:700; color:var(--muted); margin-bottom:6px; }
-        input, select, textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color:var(--on-surface); outline:none; }
-        input:focus, select:focus, textarea:focus{ box-shadow: 0 0 0 3px rgba(255,46,140,0.08); border-color: rgba(255,46,140,0.2); }
+        .form-card input,
+        .form-card select,
+        .form-card textarea{
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(255,255,255,0.08);
+            background-color:#1f1f27 !important;
+            color:#e4e1ed !important;
+            caret-color:#e4e1ed;
+            outline:none;
+            -webkit-text-fill-color:#e4e1ed;
+            appearance:none;
+            -webkit-appearance:none;
+            -moz-appearance:none;
+        }
+        .form-card input::placeholder,
+        .form-card textarea::placeholder{ color:#94a3b8; }
+        .form-card select option{ color:#e4e1ed; background:#1f1f27; }
+        .form-card input:focus,
+        .form-card select:focus,
+        .form-card textarea:focus{
+            box-shadow: 0 0 0 3px rgba(255,46,140,0.08);
+            border-color: rgba(255,46,140,0.3);
+            background-color:#25252e !important;
+        }
+        .form-card input[type="file"]{
+            padding:9px 12px;
+            color:#e4e1ed !important;
+        }
+        .form-card input[type="file"]::file-selector-button{
+            background:#2a2a36;
+            color:#e4e1ed;
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:8px;
+            padding:8px 12px;
+            margin-right:12px;
+            cursor:pointer;
+        }
+        .form-card input[type="file"]::-webkit-file-upload-button{
+            background:#2a2a36;
+            color:#e4e1ed;
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:8px;
+            padding:8px 12px;
+            margin-right:12px;
+            cursor:pointer;
+        }
         .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
         .full { grid-column: 1 / -1; }
         .actions{ margin-top:16px; display:flex; gap:10px; align-items:center; }
@@ -54,6 +100,8 @@
         <nav class="site-nav">
             <a th:href="@{/home}" class="nav-link">Dashboard</a>
             <a th:href="@{/bookings}" class="nav-link">My Bookings</a>
+            <a th:if="${isAdmin}" th:href="@{/admin/dashboard}" class="nav-link">Admin Dashboard</a>
+
         </nav>
         <div style="display:flex;align-items:center;gap:0.75rem;">
             <form method="post" th:action="@{/logout}" style="display:inline;">
@@ -69,7 +117,7 @@
         </div>
 
         <div class="form-card">
-            <form th:action="@{/courts}" th:object="${court}" method="post">
+            <form th:action="@{/courts}" th:object="${court}" method="post" enctype="multipart/form-data">
                 <div class="grid">
                     <div>
                         <label for="name">Name</label>
@@ -92,6 +140,10 @@
                     <div>
                         <label for="pricePerHour">Price per Hour</label>
                         <input id="pricePerHour" type="number" step="0.01" th:field="*{pricePerHour}" required />
+                    </div>
+                    <div class="full">
+                        <label for="thumbnailFile">Court Photo</label>
+                        <input id="thumbnailFile" name="thumbnailFile" type="file" accept="image/*" />
                     </div>
                 </div>
 

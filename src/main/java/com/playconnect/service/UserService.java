@@ -4,6 +4,8 @@ import com.playconnect.entity.User;
 import com.playconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
 
 @Service // This class handles services logic (login, register)
@@ -33,6 +35,19 @@ public class UserService {
             return user.get(); // Return the User object
         }
         return null; // User not found
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public boolean hardDeleteUser(Long id) {
+        Optional<User> user = userRepository.findById(id);  // Find user in DB
+        if (user.isPresent()) {  // if user exists
+            userRepository.delete(user.get());  // Delete from DB
+            return true;  // Return true (success)
+        }
+        return false;  // else Return false (user not found)
     }
     // Register new user
     public boolean registerPlayer(String firstName, String lastName, String username, String email, String password) {
