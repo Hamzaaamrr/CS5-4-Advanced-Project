@@ -1,7 +1,6 @@
 package com.playconnect.entity;
 
 import java.math.BigDecimal;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -106,6 +105,5 @@ public class Booking {
         CONFIRMED,
         CANCELLED
     }
-
 
 }

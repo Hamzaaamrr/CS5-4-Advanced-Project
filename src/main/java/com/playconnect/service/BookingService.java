@@ -22,12 +22,18 @@ public class BookingService {
     private final TimeSlotRepo TR;
     private final CourtRepo CR;
     private final BookingRepo BR;
+    private final MailService mailService;
 
-    public BookingService(CourtRepo CR, TimeSlotRepo TR, UserRepository UR, BookingRepo BR) {
+    public BookingService(CourtRepo CR, TimeSlotRepo TR, UserRepository UR, BookingRepo BR, MailService mailService) {
         this.CR = CR;
         this.TR = TR;
         this.UR = UR;
         this.BR = BR;
+        this.mailService = mailService;
+    }
+
+    public List<Booking> getAllBookings() {
+        return BR.findAll();
     }
     // getAllBookings: (admin method)
     public List<Booking> getAllBookings() {
@@ -45,10 +51,6 @@ public class BookingService {
         }
 
         return bookings;
-    }
-
-    public List<Booking> getAllBookings() {
-        return BR.findAll();
     }
 
     public List<Booking> getBookingsForUser(Long userId) {
@@ -144,6 +146,8 @@ public class BookingService {
     //REMADE CREATE BOOKING FUNCTION
     @Transactional
     public Booking createBooking(User user, Court court, LocalDate date, LocalTime startTime, LocalTime endTime) {
+
+
         if (user == null || !user.isActive()) {
             throw new IllegalArgumentException("Invalid user details.");
         }
@@ -183,10 +187,16 @@ public class BookingService {
 
         try {
             TR.save(slot);
-            return BR.save(booking);
+            Booking savedBooking = BR.save(booking);
+            mailService.sendBookingEmail(persistedUser, savedBooking);
+            return savedBooking;
         } catch (DataIntegrityViolationException ex) {
-            throw new IllegalStateException("Booking failed because the timeslot was taken. Please try again.", ex);
+            throw new IllegalStateException(
+                    "Booking failed because the timeslot was taken. Please try again.",
+                    ex
+            );
         }
+
     }
 
     private TimeSlot createSlot(TimeSlot requestedSlot, Court court, LocalDate date, LocalTime startTime, LocalTime endTime) {
