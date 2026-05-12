@@ -1,0 +1,13 @@
+package enums;
+//enum: list mein options ma3nfa3sh a5tar 7aga barahom (zay el menu ma3nfash atlob 7aga mesh mawgoda)
+
+public enum SportType {
+ FOOTBALL,      
+ BASKETBALL,    
+ BADMINTON,     
+ TENNIS,        
+ VOLLEYBALL,    
+ CRICKET,       
+ TABLE_TENNIS,  
+ SQUASH         
+}
