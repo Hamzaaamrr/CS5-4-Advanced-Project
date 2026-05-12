@@ -96,7 +96,7 @@ public class WebController {
     }
 
     @GetMapping("/home")
-    public String showCourts(Model model, HttpSession session) {
+    public String showCourts(@RequestParam(required = false, defaultValue = "") String search, Model model, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         User currentUser = null;
 
@@ -115,12 +115,13 @@ public class WebController {
             }
             model.addAttribute("isAdmin", isAdmin);
 
-            List<Court> courts = courtService.getActiveCourts();
+            List<Court> courts = courtService.searchActiveCourts(search);
             if (courts == null) {
                 courts = List.of(); //0 element list if no courts found
             }
 
             model.addAttribute("courts", courts);
+            model.addAttribute("searchTerm", search);
             return "home";
     }
 
@@ -135,6 +136,8 @@ public class WebController {
             return "redirect:/home";
         }
 
+        model.addAttribute("currentUser", user);
+        model.addAttribute("isAdmin", true);
         model.addAttribute("court", new Court());
         model.addAttribute("sportTypes", SportType.values());
         return "court-form";

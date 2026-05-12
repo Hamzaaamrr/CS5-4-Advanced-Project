@@ -33,6 +33,20 @@ public class CourtService {
     public List<Court> getActiveCourts() {
         return courtRepo.findByActiveTrue();  // Query: SELECT * FROM courts WHERE active = true
     }
+
+    public List<Court> searchActiveCourts(String searchTerm) {
+        List<Court> courts = getActiveCourts();
+        if (searchTerm == null || searchTerm.isBlank()) {
+            return courts;
+        }
+
+        String normalizedSearch = searchTerm.trim().toLowerCase();
+        return courts.stream()
+                .filter(court -> (court.getName() != null && court.getName().toLowerCase().contains(normalizedSearch))
+                || (court.getAddress() != null && court.getAddress().toLowerCase().contains(normalizedSearch))
+                || (court.getSportType() != null && court.getSportType().toLowerCase().contains(normalizedSearch)))
+                .toList();
+    }
     
     public List<Court> getAllCourts() {
         return courtRepo.findAll();  // Query: SELECT * FROM courts (all courts regardless of active status)
