@@ -43,9 +43,6 @@ public class Booking {
     @Column(nullable = false)
     private BookingStatus bookingStatus = BookingStatus.PENDING; // defaults to pending when created
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     public Long getId() {
         return id;
@@ -103,24 +100,12 @@ public class Booking {
         this.bookingStatus = bookingStatus;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
-    }
-
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
-    }
 
     public enum BookingStatus {
-        COMPLETE,
         PENDING,
         CONFIRMED,
         CANCELLED
     }
 
-    public enum PaymentStatus {
-        PENDING,
-        PAID,
-        FAILED
-    }
+
 }

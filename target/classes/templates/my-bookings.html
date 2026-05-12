@@ -134,10 +134,26 @@
         @media (min-width: 768px) { .card { flex-direction: row; } }
 
         .card-thumb {
+            position: relative;
             width: 100%; height: 7rem; border-radius: 0.75rem; flex-shrink: 0;
             background: linear-gradient(135deg, rgba(255,46,140,0.2), rgba(0,244,254,0.2));
+            overflow: hidden;
         }
         @media (min-width: 768px) { .card-thumb { width: 7rem; } }
+
+        .card-thumb-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,10,18,0.3), transparent 65%);
+        }
 
         .card-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
 
@@ -250,7 +266,10 @@
 
             <!-- Booking Card -->
             <div th:if="${bookings != null and bookings.size() > 0}" th:each="booking : ${bookings}" class="card">
-                <div class="card-thumb"></div>
+                <div class="card-thumb">
+                    <img th:if="${booking.court != null and booking.court.thumbnailData != null}" th:src="${booking.court.thumbnailData}" alt="Court photo" class="card-thumb-image" />
+                    <div class="card-thumb-overlay"></div>
+                </div>
                 <div class="card-body">
                     <div>
                         <div class="badge-row">

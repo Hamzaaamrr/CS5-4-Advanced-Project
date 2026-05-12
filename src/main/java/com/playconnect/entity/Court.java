@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,6 +27,10 @@ public class Court {
     
     @Column(nullable = false)
     private BigDecimal pricePerHour;
+
+    @Lob
+    @Column(columnDefinition = "CLOB")
+    private String thumbnailData;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -76,6 +81,14 @@ public class Court {
 
     public void setPricePerHour(BigDecimal pricePerHour) {
         this.pricePerHour = pricePerHour;
+    }
+
+    public String getThumbnailData() {
+        return thumbnailData;
+    }
+
+    public void setThumbnailData(String thumbnailData) {
+        this.thumbnailData = thumbnailData;
     }
 
     public int getNumofPlayers() {

@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 // import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebController {
@@ -139,7 +141,7 @@ public class WebController {
     }
 
     @PostMapping("/courts")
-    public String createCourt(@ModelAttribute Court court, HttpSession session) {
+    public String createCourt(@ModelAttribute Court court, @RequestParam(required = false) MultipartFile thumbnailFile, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) {
             return "redirect:/login";
@@ -149,29 +151,30 @@ public class WebController {
             return "redirect:/home";
         }
 
-        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour());
+        courtService.createCourt(court.getName(), court.getDescription(), court.getSportType(), court.getAddress(), court.getPricePerHour(), thumbnailFile);
         return "redirect:/home";
     }
 
     @PostMapping("/courts/{courtId}/delete")
-    public String removeCourt(@PathVariable Long courtId, HttpSession session, Model model){
+    public String removeCourt(@PathVariable Long courtId, HttpSession session, Model model, RedirectAttributes ra){
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
-        User user = userService.getUserById(userId);
 
         if(userId == null){
             return "redirect:/login";
         }
+
+        User user = userService.getUserById(userId);
         if (!user.isAdmin()) {
-            model.addAttribute("error", "You do not have permission to delete this court.");
+            ra.addFlashAttribute("error", "You do not have permission to delete this court.");
             return "redirect:/home";
         }
 
         try {
             courtService.hardDeleteCourt(courtId);
-            model.addAttribute("success", "Court deleted successfully.");
+            ra.addFlashAttribute("success", "Court has been permanently deleted.");
             return "redirect:/home";
         } catch (Exception e) {
-            model.addAttribute("error", "Error deleting court: " + e.getMessage());
+            ra.addFlashAttribute("error", "Error deleting court: " + e.getMessage());
             return "redirect:/home";
         }
     }
