@@ -179,7 +179,7 @@ public class AdminController {
 
      // hard delete court: remove court from database
     @PostMapping("/courts/delete/{id}")  // Handles POST requests to permanently delete a court
-    public String DeleteCourt(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
+    public String deleteCourt(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
         if (!isAdmin(session)) {  // If not admin
             ra.addFlashAttribute("error", "Access denied.");  // Show error
             return "redirect:/login";  // Redirect to login
@@ -208,7 +208,7 @@ public class AdminController {
             return "redirect:/login";  // Redirect to login
         }
         User admin = getCurrentUser(session);  // Get the admin user cancelling the booking
-        bookingService.CancelBooking(id, admin);  // Cancel the booking (admin can cancel any booking)
+        bookingService.cancelBooking(id, admin);  // Cancel the booking (admin can cancel any booking)
         ra.addFlashAttribute("success", "Booking has been cancelled.");  // Show success
         return "redirect:/admin/bookings";  // Redirect back to bookings list
     }

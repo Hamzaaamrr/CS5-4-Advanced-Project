@@ -1,4 +1,4 @@
-package Service;
+package com.playconnect.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -6,13 +6,20 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Entity.*;
-import repository.*;
+import com.playconnect.entity.Booking;
+import com.playconnect.entity.Court;
+import com.playconnect.entity.TimeSlot;
+import com.playconnect.entity.User;
+import com.playconnect.repository.BookingRepo;
+import com.playconnect.repository.CourtRepo;
+import com.playconnect.repository.TimeSlotRepo;
+import com.playconnect.repository.UserRepository;
 
 
 @Service
@@ -32,25 +39,9 @@ public class BookingService {
         this.mailService = mailService;
     }
 
-    public List<Booking> getAllBookings() {
-        return BR.findAll();
-    }
     // getAllBookings: (admin method)
     public List<Booking> getAllBookings() {
         return BR.findAll();  // Returns every booking in the database
-    }
-
-    public List<Booking> getBookingsForUser() {
-        List<Booking> all = BR.findAll();
-        List<Booking> bookings = new ArrayList<>();
-
-        for (Booking b : all) {
-            if (b.getBookingStatus().equals(Booking.BookingStatus.PENDING)) {
-                bookings.add(b);
-            }
-        }
-
-        return bookings;
     }
 
     public List<Booking> getBookingsForUser(Long userId) {
@@ -95,7 +86,7 @@ public class BookingService {
     }
 
     @Transactional
-    public void CancelBooking(long id, User user) {
+    public void cancelBooking(long id, User user) {
         Booking booking = BR.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
 
@@ -106,9 +97,9 @@ public class BookingService {
         if (user != null && !isBookingOwnerOrAdmin(booking, user)) {
             throw new IllegalStateException("You do not have permission to cancel this booking.");
         }
-
         booking.setBookingStatus(Booking.BookingStatus.CANCELLED);
-        BR.save(booking);
+        Booking savedBooking = BR.save(booking);
+        mailService.sendCancellationEmail(user, savedBooking);
 
         TimeSlot timeSlot = booking.getTimeSlot();
         if (timeSlot != null) {
@@ -209,14 +200,6 @@ public class BookingService {
         return TR.save(slot);
     }
 
-
-    // private boolean hasOverlap(TimeSlot slot, Court court) {
-    //     return TR.findByCourtIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-    //             court.getId(), slot.getDate(), slot.getEndTime(), slot.getStartTime())
-    //             .stream()
-    //             .anyMatch(existing -> !existing.isAvailable());
-    // }
-
     private BigDecimal calculateTotalPrice(TimeSlot slot, Court court) {
         long hours = Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
         if (hours <= 0) {
@@ -224,6 +207,4 @@ public class BookingService {
         }
         return court.getPricePerHour().multiply(BigDecimal.valueOf(hours));
     }
-
-    
 }

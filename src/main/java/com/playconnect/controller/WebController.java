@@ -278,7 +278,7 @@ public class WebController {
             return "redirect:/login";
         }
 
-        bookingService.CancelBooking(bookingId, user);
+        bookingService.cancelBooking(bookingId, user);
 
         return "redirect:/bookings";
     }
