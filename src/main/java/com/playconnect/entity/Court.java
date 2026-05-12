@@ -23,7 +23,6 @@ public class Court {
     private String description;
     private String sportType;
     private String address;
-    private int NumofPlayers;
     
     @Column(nullable = false)
     private BigDecimal pricePerHour;
@@ -91,13 +90,6 @@ public class Court {
         this.thumbnailData = thumbnailData;
     }
 
-    public int getNumofPlayers() {
-        return NumofPlayers;
-    }
-
-    public void setNumofPlayers(int numofPlayers) {
-        NumofPlayers = numofPlayers;
-    }
 
     public boolean isActive() {
         return active;
@@ -107,7 +99,4 @@ public class Court {
         this.active = active;
     }
 
-    public boolean CourtValid() {
-        return NumofPlayers >= 1;
-    }
 }
