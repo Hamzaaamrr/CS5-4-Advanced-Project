@@ -27,3 +27,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Custom Ignores ###
+target/
+jdk21/
+jdk21.zip
+data/
+*.db
+*.class
+

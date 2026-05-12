@@ -204,7 +204,7 @@ public class WebController {
     }
 
     @PostMapping("/book")
-    public String createBooking(@RequestParam Long courtId, @RequestParam String bookingDate, @RequestParam String startTime, @RequestParam String endTime, HttpSession session, Model model) {
+    public String createBooking(@RequestParam Long courtId, @RequestParam String bookingDate, @RequestParam String startTime, @RequestParam String endTime, HttpSession session, Model model, RedirectAttributes ra) {
            
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) {
@@ -227,11 +227,12 @@ public class WebController {
 
             // Create the booking using the service
             bookingService.createBooking(currentUser, court, date, start, end);
-
+            ra.addFlashAttribute("success", "Booking created successfully.");
             return "redirect:/bookings";
 
         } catch (Exception e) {
-            model.addAttribute("error", "Error creating booking: " + e.getMessage());
+            // Use flash attribute so message survives the redirect and is visible to the user
+            ra.addFlashAttribute("error", "Error creating booking: " + e.getMessage());
             return "redirect:/courts/" + courtId + "/schedule";
         }
     }
