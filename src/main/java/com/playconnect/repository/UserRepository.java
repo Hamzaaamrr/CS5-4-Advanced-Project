@@ -1,13 +1,19 @@
-package com.playconnect.repository;  
-import com.playconnect.entity.User;  // Import User entity
-import org.springframework.data.jpa.repository.JpaRepository;  // Gives CRUD methods
-import org.springframework.stereotype.Repository;  // Marks as Spring Bean
-import java.util.Optional;  // For handling null safely
+package repository;  
+// This file is in the repository (database operations)
 
-@Repository  // Marks this as a Repository component
-public interface UserRepository extends JpaRepository<User, Long> {  // Extends JPA repo (User is entity, Long is ID type)
+import Entity.User;  
+
+import org.springframework.data.jpa.repository.JpaRepository;  // Gives built-in database methods (no SQL needed)
+import org.springframework.stereotype.Repository;  // Marks this as a Repository component
+
+import java.util.Optional;  // For handling null safely (avoid errors)
+
+@Repository 
+public interface UserRepository extends JpaRepository<User, Long> {  // <Entity type, ID type>
     
-    Optional<User> findByUsername(String username);  // Finds user by username, returns Optional (may be empty)
+    // Find user by their username (username is unique)
+    Optional<User> findByUsername(String username);  
     
-    Optional<User> findByEmail(String email);  // Finds user by email, returns Optional (may be empty)
+    // Find user by their email (email is unique)
+    Optional<User> findByEmail(String email);  
     }
