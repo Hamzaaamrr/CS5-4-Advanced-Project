@@ -7,25 +7,24 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity  // Makes this class a database table
-@Table(name = "users")  // Names the table "users" in database
-public class User {    
-    @Id  // Marks this as PRIMARY KEY (unique identifier)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increments ID (1,2,3...)
+@Entity
+@Table(name = "users")
+public class User {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String firstName;
     private String lastName;
-    @Column(unique = true) //Unique constraint for username
-    private String username;   
-    @Column(unique = true)  // Ensures no two users have same email
-    private String email;    
-    private String password;     
+	@Column(unique = true)
+	private String username;
+	@Column(unique = true)
+	private String email;
+	private String password;
     private String role;
-	private boolean isActive;         
-    public User() {}  // Empty constructor (required by JPA) work all frameworks, springboot can create users
-    //getters and setters:
+	private boolean isActive;
+	public User() {}
     public String getFullName() {
-        return firstName + " " + lastName;  // Combines first + last name
+		return firstName + " " + lastName;
     }
     
     public Long getId() {
@@ -88,10 +87,10 @@ public class User {
         return isActive;
     }
     
-    public void setActive(boolean isActive) {
+	public void setActive(boolean isActive) {
         this.isActive = isActive;
     }
-// methods:
+
 	public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role);
     }

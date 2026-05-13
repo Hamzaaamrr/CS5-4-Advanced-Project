@@ -18,40 +18,39 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
-@Controller  // class handles web requests
-@RequestMapping("/admin")  // All urls in this controller start with /admin
+@Controller
+@RequestMapping("/admin")
 public class AdminController {
 
-    private final UserService userService;  // Handles user database operations
-    private final CourtService courtService;  // Handles court database operations
-    private final BookingService bookingService;  // Handles booking database operations
+    private final UserService userService;
+    private final CourtService courtService;
+    private final BookingService bookingService;
 
-    // Constructor: Spring Boot calls this automatically
     public AdminController(UserService userService, CourtService courtService, BookingService bookingService) {
-        this.userService = userService;  // Store UserService for later use
-        this.courtService = courtService;  // Store CourtService for later use
-        this.bookingService = bookingService;  // Store BookingService for later use
+        this.userService = userService;
+        this.courtService = courtService;
+        this.bookingService = bookingService;
     }
 
-    //method: Check if user is admin
-    private boolean isAdmin(HttpSession session) {  // Checks if logged in user is admin
-        User user = getCurrentUser(session);  // Get full User object from database
+    private boolean isAdmin(HttpSession session) {
+        User user = getCurrentUser(session);
 
-        return user != null && user.isAdmin();  // Return true only if user exists w has admin role
+        return user != null && user.isAdmin();
     }
 
+    // Helper method to populate the model with common data for admin views
     private void populateDashboardModel(HttpSession session, Model model) {
-        User currentUser = getCurrentUser(session);  // Get current admin user
-        List<User> allUsers = userService.getAllUsers();  // Get ALL users from database
-        List<Court> allCourts = courtService.getAllCourts();  // Get ALL courts from database
-        List<Booking> allBookings = bookingService.getAllBookings();  // Get ALL bookings from database
+        User currentUser = getCurrentUser(session);
+        List<User> allUsers = userService.getAllUsers();
+        List<Court> allCourts = courtService.getAllCourts();
+        List<Booking> allBookings = bookingService.getAllBookings();
 
-        Map<Long, Long> userActiveBookingCounts = new LinkedHashMap<>();  // Keep user order stable for the dashboard
-        for (User user : allUsers) {  // Seed every user with zero active bookings
+        Map<Long, Long> userActiveBookingCounts = new LinkedHashMap<>();
+        for (User user : allUsers) {
             userActiveBookingCounts.put(user.getId(), 0L);
         }
 
-        for (Booking booking : allBookings) {  // Count non-cancelled bookings per user
+        for (Booking booking : allBookings) {
             if (booking.getUser() == null || booking.getUser().getId() == null) {
                 continue;
             }
@@ -62,93 +61,104 @@ public class AdminController {
             userActiveBookingCounts.put(userId, userActiveBookingCounts.getOrDefault(userId, 0L) + 1L);
         }
 
-        long activeUsers = 0;  // Counter for active users
-        for (User user : allUsers) {  // Loop through each user
-            if (user.isActive()) {  // If user is active
-                activeUsers++;  // Increase counter
+        long activeUsers = 0;
+        for (User user : allUsers) {
+            if (user.isActive()) {
+                activeUsers++;
             }
         }
 
-        long activeCourts = 0;  // Counter for active courts
-        for (Court court : allCourts) {  // Loop through each court
-            if (court.isActive()) {  // If court is active
-                activeCourts++;  // Increase counter
+        long activeCourts = 0;
+        for (Court court : allCourts) {
+            if (court.isActive()) {
+                activeCourts++;
             }
         }
 
-        long confirmedBookings = 0;  // Counter for confirmed bookings
-        for (Booking booking : allBookings) {  // Loop through each booking
-            if (booking.getBookingStatus() == Booking.BookingStatus.CONFIRMED) {  // If booking is confirmed
-                confirmedBookings++;  // Increase counter
+        long confirmedBookings = 0;
+        for (Booking booking : allBookings) {
+            if (booking.getBookingStatus() == Booking.BookingStatus.CONFIRMED) {
+                confirmedBookings++;
             }
         }
 
-        model.addAttribute("currentUser", currentUser);  // Send current admin user to HTML
-        model.addAttribute("isAdmin", true);  // Flag admin-only template controls
-        model.addAttribute("users", allUsers);  // Send list of all users to HTML
-        model.addAttribute("userBookingCounts", userActiveBookingCounts);  // Send per-user active booking counts
-        model.addAttribute("bookings", allBookings);  // Send list of all bookings to HTML
-        model.addAttribute("totalUsers", allUsers.size());  // Send total users count to HTML
-        model.addAttribute("activeUsers", activeUsers);  // Send active users count to HTML
-        model.addAttribute("totalCourts", allCourts.size());  // Send total courts count to HTML
-        model.addAttribute("activeCourts", activeCourts);  // Send active courts count to HTML
-        model.addAttribute("totalBookings", allBookings.size());  // Send total bookings count to HTML
-        model.addAttribute("confirmedBookings", confirmedBookings);  // Send confirmed bookings count to HTML
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("isAdmin", true);
+        model.addAttribute("users", allUsers);
+        model.addAttribute("userBookingCounts", userActiveBookingCounts);
+        model.addAttribute("bookings", allBookings);
+        model.addAttribute("totalUsers", allUsers.size());
+        model.addAttribute("activeUsers", activeUsers);
+        model.addAttribute("totalCourts", allCourts.size());
+        model.addAttribute("activeCourts", activeCourts);
+        model.addAttribute("totalBookings", allBookings.size());
+        model.addAttribute("confirmedBookings", confirmedBookings);
     }
 
-    // method: Get current logged in user
-    private User getCurrentUser(HttpSession session) {  // Returns the current logged in user
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");  // Get user ID from session
-        if (userId == null) {  // If no user ID
-            return null;  // Return null (not logged in)
+    private User getCurrentUser(HttpSession session) {
+        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        if (userId == null) {
+            return null;
         }
-        return userService.getUserById(userId);  // Find and return user from database
+        return userService.getUserById(userId);
     }
 
-    //admin dashboard: Home page for admin
-    @GetMapping("/dashboard")  // Handles GET requests to /admin/dashboard
+    //view admin dashboard
+    @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model, RedirectAttributes ra) {
-        if (!isAdmin(session)) {  // If user is NOT an admin
-            ra.addFlashAttribute("error", "Access denied. Admin privileges required.");  // Show error message
-            return "redirect:/login";  // Send user back to login page
+        if (!isAdmin(session)) {
+            ra.addFlashAttribute("error", "Access denied. Admin privileges required.");
+            return "redirect:/login";
         }
         populateDashboardModel(session, model);
         
-        return "admin/dashboard";  // Return admin/dashboard.html template
+        return "admin/dashboard";
     }
 
-    // user management: View all users
-    @GetMapping("/users")  // Handles GET requests to /admin/users
+    //view user management part of admin dashboard
+    @GetMapping("/users")
     public String manageUsers(HttpSession session, Model model, RedirectAttributes ra) {
-        if (!isAdmin(session)) {  // If not admin
-            ra.addFlashAttribute("error", "Access denied. Admin privileges required.");  // Show error
-            return "redirect:/login";  // Redirect to login
+        if (!isAdmin(session)) {
+            ra.addFlashAttribute("error", "Access denied. Admin privileges required.");
+            return "redirect:/login";
         }
-        List<User> allUsers = userService.getAllUsers();  // Get all users from database
-        model.addAttribute("currentUser", getCurrentUser(session));  // Send current admin user to HTML
-        model.addAttribute("users", allUsers);  // Send list of all users to HTML
-        return "admin/users";  // Return admin/users.html
+        List<User> allUsers = userService.getAllUsers();
+        model.addAttribute("currentUser", getCurrentUser(session));
+        model.addAttribute("users", allUsers);
+        return "admin/users";
     }
     
     
-    // delete user: remove user from database
-    @PostMapping("/users/delete/{id}")  // Handles POST requests to permanently delete a user
+    @PostMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
-        if (!isAdmin(session)) {  // If not admin
-            ra.addFlashAttribute("error", "Access denied.");  // Show error
-            return "redirect:/login";  // Redirect to login
+        if (!isAdmin(session)) {
+            ra.addFlashAttribute("error", "Access denied.");
+            return "redirect:/login";
         }
-        User currentAdmin = getCurrentUser(session);  // Get the admin doing this action
-        if (currentAdmin.getId().equals(id)) {  // If admin tries to delete themselves
-            ra.addFlashAttribute("error", "You cannot delete your own account.");  // Show error
-            return "redirect:/admin/users";  // Redirect back
+        User currentAdmin = getCurrentUser(session);
+        if (currentAdmin.getId().equals(id)) {
+            ra.addFlashAttribute("error", "You cannot delete your own account.");
+            return "redirect:/admin/users";
         }
-        userService.hardDeleteUser(id);  // Permanently delete user from database
-        ra.addFlashAttribute("success", "User has been permanently deleted.");  // Show success
-        return "redirect:/admin/users";  // Redirect back to users list
+        userService.hardDeleteUser(id);
+        ra.addFlashAttribute("success", "User has been permanently deleted.");
+        return "redirect:/admin/users";
+    }
+    
+
+    @PostMapping("/courts/delete/{id}")
+    public String deleteCourt(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
+        if (!isAdmin(session)) {
+            ra.addFlashAttribute("error", "Access denied.");
+            return "redirect:/login";
+        }
+        courtService.hardDeleteCourt(id);
+        ra.addFlashAttribute("success", "Court has been permanently deleted.");
+        return "redirect:/admin/courts";
     }
 
     
+<<<<<<< Updated upstream
     // soft delete court: Hide court from users (set active = false)
     @PostMapping("/courts/deactivate/{id}")  // Handles POST requests to hide a court
     public String deactivateCourt(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
@@ -202,14 +212,24 @@ public class AdminController {
 
     // cancel booking: Admin can cancel any booking
     @PostMapping("/bookings/cancel/{id}")  // Handles POST requests to cancel a booking
+=======
+    @PostMapping("/bookings/cancel/{id}")
+>>>>>>> Stashed changes
     public String cancelBooking(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
-        if (!isAdmin(session)) {  // If not admin
-            ra.addFlashAttribute("error", "Access denied.");  // Show error
-            return "redirect:/login";  // Redirect to login
+        if (!isAdmin(session)) {
+            ra.addFlashAttribute("error", "Access denied.");
+            return "redirect:/login";
         }
+<<<<<<< Updated upstream
         User admin = getCurrentUser(session);  // Get the admin user cancelling the booking
         bookingService.CancelBooking(id, admin);  // Cancel the booking (admin can cancel any booking)
         ra.addFlashAttribute("success", "Booking has been cancelled.");  // Show success
         return "redirect:/admin/bookings";  // Redirect back to bookings list
+=======
+        User admin = getCurrentUser(session);
+        bookingService.cancelBooking(id, admin);
+        ra.addFlashAttribute("success", "Booking has been cancelled.");
+        return "redirect:/admin/bookings";
+>>>>>>> Stashed changes
     }
 }

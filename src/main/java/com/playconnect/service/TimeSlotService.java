@@ -1,27 +1,25 @@
 package com.playconnect.service;
 
-import org.springframework.beans.factory.annotation.Autowired;  // @Autowired = Spring automatically connects/injects the dependency
-import org.springframework.stereotype.Service;  // @Service = Marks this class as a Service layer (holds business logic)
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.repository.TimeSlotRepo;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;  // Optional = Container that may or may not hold a value (helps avoid null errors)
+import java.util.Optional;
 
-@Service  // @Service = This class handles TimeSlot business logic (Spring will detect it automatically)
+@Service
 public class TimeSlotService {
     
-    @Autowired  // @Autowired = Spring automatically creates and injects TimeSlotRepo (no need for "new TimeSlotRepo()")
+    @Autowired
     private TimeSlotRepo timeSlotRepo;
     
-    // Get all time slots for a specific court on a specific date
     public List<TimeSlot> getCourtSlotsByDate(Long courtId, LocalDate date) {
         return timeSlotRepo.findByCourtIdAndDateOrderByStartTimeAsc(courtId, date);
     }
     
-    // Check if a specific time slot exists and is available
     public boolean isSlotAvailable(Long courtId, LocalDate date, LocalTime startTime, LocalTime endTime) {
         Optional<TimeSlot> slot = timeSlotRepo.findByCourtIdAndDateAndStartTimeAndEndTime(
             courtId, date, startTime, endTime);
@@ -29,7 +27,6 @@ public class TimeSlotService {
         return slot.isPresent() && slot.get().isAvailable();
     }
     
-    // Get available slots only (not booked)
     public List<TimeSlot> getAvailableSlotsByDate(Long courtId, LocalDate date) {
         List<TimeSlot> allSlots = getCourtSlotsByDate(courtId, date);
         return allSlots.stream()
@@ -37,7 +34,6 @@ public class TimeSlotService {
                 .toList();
     }
     
-    // Mark a time slot as unavailable (when booked)
     public boolean markSlotAsUnavailable(Long slotId) {
         Optional<TimeSlot> slot = timeSlotRepo.findById(slotId);
         if (slot.isPresent()) {
@@ -49,7 +45,6 @@ public class TimeSlotService {
         return false;
     }
     
-    // Mark a time slot as available (when booking cancelled)
     public boolean markSlotAsAvailable(Long slotId) {
         Optional<TimeSlot> slot = timeSlotRepo.findById(slotId);
         if (slot.isPresent()) {

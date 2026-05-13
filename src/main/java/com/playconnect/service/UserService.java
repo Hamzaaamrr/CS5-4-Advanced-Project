@@ -8,33 +8,27 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-@Service // This class handles services logic (login, register)
+@Service
 public class UserService {
-    @Autowired // Spring automatically creates UserRepository here (no need for *new*)
+    @Autowired
     private UserRepository userRepository;
-    // Login with email OR username
     public User authenticate(String emailOrUsername, String password) {
-        // Try to find by email first
         Optional<User> user = userRepository.findByEmail(emailOrUsername);
-        // If not found by email, try by username
         if (user.isEmpty()) {
             user = userRepository.findByUsername(emailOrUsername);
         }
-        // Check password if it is == to the password of the user
         if (user.isPresent() && user.get().getPassword().equals(password)) {
-            return user.get();// Return the object (User)
+            return user.get();
         }
         
-        return null; // else(Login failed)
+        return null;
     }
-    // Get user by ID
     public User getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);  // Find user in DB
-        if (user.isPresent()) // Check if user exists
-        	{
-            return user.get(); // Return the User object
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            return user.get();
         }
-        return null; // User not found
+        return null;
     }
 
     public List<User> getAllUsers() {
@@ -42,24 +36,20 @@ public class UserService {
     }
 
     public boolean hardDeleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);  // Find user in DB
-        if (user.isPresent()) {  // if user exists
-            userRepository.delete(user.get());  // Delete from DB
-            return true;  // Return true (success)
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            userRepository.delete(user.get());
+            return true;
         }
-        return false;  // else Return false (user not found)
+        return false;
     }
-    // Register new user
     public boolean registerPlayer(String firstName, String lastName, String username, String email, String password) {
-        // Check if username exists
         if (userRepository.findByUsername(username).isPresent()) {
-            return false; // Username taken
+            return false;
         }
-        // Check if email exists
         if (userRepository.findByEmail(email).isPresent()) {
-            return false; // Email already registered
+            return false;
         }
-        // Create new user
         User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
@@ -68,14 +58,13 @@ public class UserService {
         user.setPassword(password);
         user.setRole("PLAYER");
         user.setActive(true);
-        userRepository.save(user); // Save to DB
-        return true;  // Registration successful
+        userRepository.save(user);
+        return true;
     }
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
     public User findByUsername(String name) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findByUsername'");
     }
 }

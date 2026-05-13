@@ -20,7 +20,7 @@ public class TimeSlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne //many time slots can belong to one court
+    @ManyToOne
     @JoinColumn(name = "court_id")
     private Court court;
 

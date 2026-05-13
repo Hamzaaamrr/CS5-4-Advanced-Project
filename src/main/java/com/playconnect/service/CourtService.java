@@ -1,27 +1,27 @@
 package com.playconnect.service;
 
-import com.playconnect.entity.Court; 
+import com.playconnect.entity.Court;
 import com.playconnect.entity.Booking;
 import com.playconnect.entity.TimeSlot;
 import com.playconnect.repository.CourtRepo;
 import com.playconnect.repository.BookingRepo;
 import com.playconnect.repository.TimeSlotRepo;
-import org.springframework.beans.factory.annotation.Autowired;  
-import org.springframework.stereotype.Service; 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;  
+import java.math.BigDecimal;
 import java.util.Base64;
-import java.util.List; 
-import java.util.Optional;  
+import java.util.List;
+import java.util.Optional;
 
-@Service  // Service class
+@Service
 public class CourtService {
     
-    @Autowired  // Spring injects CourtRepo here
-    private CourtRepo courtRepo;  // Repository for DB operations
+    @Autowired
+    private CourtRepo courtRepo;
 
     @Autowired
     private BookingRepo bookingRepo;
@@ -29,10 +29,10 @@ public class CourtService {
     @Autowired
     private TimeSlotRepo timeSlotRepo;
     
-    // Get all active courts (isActive = true)
     public List<Court> getActiveCourts() {
-        return courtRepo.findByActiveTrue();  // Query: SELECT * FROM courts WHERE active = true
+        return courtRepo.findByActiveTrue();
     }
+
 
     public List<Court> searchActiveCourts(String searchTerm) {
         List<Court> courts = getActiveCourts();
@@ -49,22 +49,21 @@ public class CourtService {
     }
     
     public List<Court> getAllCourts() {
-        return courtRepo.findAll();  // Query: SELECT * FROM courts (all courts regardless of active status)
+        return courtRepo.findAll();
     }
 
-    // Create a new court 
     public Court createCourt(String name, String description, String sportType, String address, BigDecimal pricePerHour) {
         return createCourt(name, description, sportType, address, pricePerHour, null);
     }
 
     public Court createCourt(String name, String description, String sportType, String address, BigDecimal pricePerHour, MultipartFile thumbnailFile) {
-        Court court = new Court();  // Create new Court object
-        court.setName(name);  // Set name
-        court.setDescription(description);  // Set description
-        court.setSportType(sportType);  // Set sport type
-        court.setAddress(address);  // Set address
-        court.setPricePerHour(pricePerHour);  // Set price
-        court.setActive(true);  // Force active = true (court is available)
+        Court court = new Court();
+        court.setName(name);
+        court.setDescription(description);
+        court.setSportType(sportType);
+        court.setAddress(address);
+        court.setPricePerHour(pricePerHour);
+        court.setActive(true);
 
         if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
             try {
@@ -76,35 +75,23 @@ public class CourtService {
             }
         }
 
-        return courtRepo.save(court);  // Save to database and return saved court
+        return courtRepo.save(court);
     }
     
-    // Get court by ID
     public Court getCourtById(Long id) {
-        Optional<Court> court = courtRepo.findById(id);  // Find court in DB by ID
-        if (court.isPresent()) {  // if	court exists Return the court object
-            return court.get();   
+        Optional<Court> court = courtRepo.findById(id);
+        if (court.isPresent()) {
+            return court.get();
         }
-        return null;  // else Return null 
+        return null;
     }
     
-    // Delete court (soft delete (not from the DB) (just mark as inactive))
-    public boolean deleteCourt(Long id) {
-        Optional<Court> court = courtRepo.findById(id);  // Find court in DB
-        if (court.isPresent()) {  // if court exists
-            Court existingCourt = court.get();  // Get the court object
-            existingCourt.setActive(false);  // Mark as inactive (soft delete)
-            courtRepo.save(existingCourt);  // Save changes to DB
-            return true;  // Return true (success)
-        }
-        return false;  // else Return false (court not found)
-    }
     
-    // Hard delete (completely remove from database) - optional
+    
     @Transactional
     public boolean hardDeleteCourt(Long id) {
-        if (!courtRepo.existsById(id)) {  // Check if court exists
-            return false;  // else Return false (court not found)
+        if (!courtRepo.existsById(id)) {
+            return false;
         }
 
         List<Booking> bookings = bookingRepo.findByCourtId(id);
@@ -113,22 +100,21 @@ public class CourtService {
         List<TimeSlot> timeSlots = timeSlotRepo.findByCourtId(id);
         timeSlotRepo.deleteAll(timeSlots);
 
-        courtRepo.deleteById(id);  // Permanently delete from DB
-        return true;  // Return true (success)
+        courtRepo.deleteById(id);
+        return true;
     }
-    // Update court information
     public Court updateCourt(Long id, String name, String description, String sportType, String address, BigDecimal pricePerHour) {
-        Optional<Court> court = courtRepo.findById(id);  // Find court in DB
-        if (court.isPresent()) {  // If court exists
-            Court existingCourt = court.get();  // Get the court object
-            existingCourt.setName(name);  // Update name
-            existingCourt.setDescription(description);  // Update description
-            existingCourt.setSportType(sportType);  // Update sport type
-            existingCourt.setAddress(address);  // Update address
-            existingCourt.setPricePerHour(pricePerHour);  // Update price
-            return courtRepo.save(existingCourt);  // Save and return updated court
+        Optional<Court> court = courtRepo.findById(id);
+        if (court.isPresent()) {
+            Court existingCourt = court.get();
+            existingCourt.setName(name);
+            existingCourt.setDescription(description);
+            existingCourt.setSportType(sportType);
+            existingCourt.setAddress(address);
+            existingCourt.setPricePerHour(pricePerHour);
+            return courtRepo.save(existingCourt);
         }
-        return null;  // else Return null (court not found)
+        return null;
     }
 
 }

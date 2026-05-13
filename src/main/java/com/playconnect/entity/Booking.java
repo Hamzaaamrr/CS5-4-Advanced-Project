@@ -40,7 +40,7 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BookingStatus bookingStatus = BookingStatus.PENDING; // defaults to pending when created
+    private BookingStatus bookingStatus = BookingStatus.PENDING;
 
 
     public Long getId() {
